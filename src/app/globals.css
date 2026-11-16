@@ -1,26 +1,176 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #f7f8f5;
+  --surface: #ffffff;
+  --fg: #16201a;
+  --muted: #4a5a50;
+  --line: #d5dcd6;
+  --brand: #1f6b45;
+  --brand-strong: #154d31;
+  --brand-soft: #e3f0e8;
+  /* 출처 색: 공공데이터 / 운영자 확인 / 이용자 제보 / 빈칸 */
+  --src-public: #1d7a46;
+  --src-public-bg: #e2f3e8;
+  --src-operator: #1f5fae;
+  --src-operator-bg: #e3edfa;
+  --src-user: #8a6400;
+  --src-user-bg: #fdf3d3;
+  --src-blank: #5f6670;
+  --src-blank-bg: #eef0f2;
+  --warn: #9a5b00;
+  --warn-bg: #fff1dc;
+  --no: #b3261e;
+  --no-bg: #fde7e5;
+  --focus: #ffbf00;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #101512;
+    --surface: #18201b;
+    --fg: #eef3ef;
+    --muted: #b4c2b8;
+    --line: #34413a;
+    --brand: #6fcf97;
+    --brand-strong: #9be3b8;
+    --brand-soft: #1d3326;
+    --src-public: #7ddca0;
+    --src-public-bg: #173523;
+    --src-operator: #8cb8f5;
+    --src-operator-bg: #182a44;
+    --src-user: #f0cd5c;
+    --src-user-bg: #3a3012;
+    --src-blank: #b9c0c8;
+    --src-blank-bg: #262c31;
+    --warn: #ffc069;
+    --warn-bg: #3b2a10;
+    --no: #ff8a80;
+    --no-bg: #3d1a18;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Malgun Gothic", "Noto Sans KR", sans-serif;
+}
+
+html {
+  font-size: 112.5%; /* 18px 기본: 큰 글씨 */
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 1000;
+  background: var(--fg);
+  color: var(--bg);
+  padding: 0.75rem 1rem;
+}
+.skip-link:focus {
+  left: 0.5rem;
+  top: 0.5rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 48px;
+  padding: 0 1.1rem;
+  border-radius: 12px;
+  font-weight: 700;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+.btn-primary {
+  background: var(--brand-strong);
+  color: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  .btn-primary {
+    background: var(--brand);
+    color: #0b1a10;
+  }
+}
+.btn-outline {
+  background: var(--surface);
+  color: var(--fg);
+  border-color: var(--line);
+}
+.btn-outline[aria-pressed="true"],
+.btn-outline[aria-selected="true"] {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.src-public {
+  color: var(--src-public);
+  background: var(--src-public-bg);
+}
+.src-operator {
+  color: var(--src-operator);
+  background: var(--src-operator-bg);
+}
+.src-user {
+  color: var(--src-user);
+  background: var(--src-user-bg);
+}
+.src-blank {
+  color: var(--src-blank);
+  background: var(--src-blank-bg);
+}
+.st-warn {
+  color: var(--warn);
+  background: var(--warn-bg);
+}
+.st-no {
+  color: var(--no);
+  background: var(--no-bg);
+}
+
+.leaflet-container {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
 }

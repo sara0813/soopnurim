@@ -1,0 +1,10 @@
+{
+  "_comment": "운영자 전화 확인 결과(🔵). 휴양림 이름(앱에 표시되는 이름 그대로)을 키로, 항목 key별 status(ok|warn|no)와 value를 적습니다. 항목 key 목록은 src/lib/journey.ts 참고. 확인 날짜(checkedAt)는 필수입니다.",
+  "_example": {
+    "checkedAt": "2026-11-18",
+    "items": {
+      "roomEntrance": { "status": "warn", "value": "출입문 문턱 약 3cm, 문 폭 80cm" },
+      "disabledParking": { "status": "ok", "value": "관리동 앞 2면" }
+    }
+  }
+}
