@@ -1,5 +1,36 @@
+import { ChevronDown } from "lucide-react";
 import { SOURCES, sourceName } from "@/lib/journey";
 import type { Lang } from "@/lib/i18n";
+
+/** 접이식 카드: 제목과 한 줄 요약만 보이고, 누르면 내용이 펼쳐진다 */
+export function Fold({
+  id,
+  title,
+  meta,
+  open = false,
+  children,
+}: {
+  id: string;
+  title: string;
+  meta?: string;
+  open?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <details id={id} open={open} className="card scroll-mt-4 overflow-hidden">
+      <summary className="flex min-h-16 cursor-pointer items-center gap-3 px-4 py-3 hover:bg-surface-2 sm:px-5">
+        <span className="min-w-0 flex-1">
+          <h2 id={`${id}-h`} className="text-lg font-bold leading-snug">
+            {title}
+          </h2>
+          {meta && <span className="mt-0.5 block text-sm text-muted">{meta}</span>}
+        </span>
+        <ChevronDown aria-hidden="true" className="chev size-5 shrink-0 text-muted" />
+      </summary>
+      <div className="border-t border-line px-4 py-4 sm:px-5">{children}</div>
+    </details>
+  );
+}
 
 export function Section({
   id,

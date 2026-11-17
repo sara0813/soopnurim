@@ -197,6 +197,28 @@ SOURCES = {
         "processing": "휴양림 좌표에서 직선거리 3km 이내 정류장을 가까운 순으로 연결. TAGO에 연계되지 않은 일부 시·군은 데이터에 없음",
         "usedIn": "②대중교통(가장 가까운 정류장), 외국인 이용자 여정",
     },
+    "rail": {
+        "name": "한국철도공사_역 위치 정보",
+        "org": "한국철도공사",
+        "url": "https://www.data.go.kr/data/15127532/fileData.do",
+        "refDate": "2024-04-01",
+        "kind": "교통 · 파일데이터 (매시업)",
+        "license": LICENSE,
+        "fields": "지역본부, 역명, 위도, 경도, 출입구 개수",
+        "processing": "휴양림 좌표에서 직선거리로 가장 가까운 한국철도공사 역 1곳 (30km 이내). 열차 운행 여부·횟수는 데이터에 없음",
+        "usedIn": "②가까운 철도역, 외국인 이용 안내 '대중교통'",
+    },
+    "touristinfo": {
+        "name": "한국관광공사_전국관광안내소 정보",
+        "org": "한국관광공사 (관광정보시스템 KOTIS 개방데이터)",
+        "url": "https://www.data.go.kr/data/15151450/fileData.do",
+        "refDate": "2026-09-29",
+        "kind": "관광 · 파일데이터 (매시업)",
+        "license": LICENSE,
+        "fields": "안내소명, 주소, 제공 언어, 전화번호, 운영시간, 휴무일",
+        "processing": "주소에 좌표·시·도가 없어 거리를 잴 수 없음. 휴양림과 같은 읍·면 이름이 주소에 있고 전화 지역번호가 같은 안내소만 연결 (폐쇄·고속도로 휴게소·운영 안 함 제외). 다른 읍·면이면 빈칸",
+        "usedIn": "②관광안내소(외국어), 외국인 이용 안내 '대중교통'",
+    },
     # 공공데이터포털 데이터셋이 아니라 기관 누리집의 공식 목록. '공공데이터 N종' 집계에서는 뺀다(notPortal)
     "kfslist": {
         "name": "산림청 자연휴양림 찾기 목록 (국립·지자체·개인)",
@@ -267,6 +289,14 @@ SOURCES_EN = {
                 "Stop ID, stop name, coordinates, collection date, city",
                 "Stops within 3 km (straight line) of a forest, nearest first. Some cities not linked to TAGO are missing",
                 "Step 2 public transport, foreign visitor journey"),
+    "rail": ("KORAIL Station Locations", "Korea Railroad Corporation (KORAIL)", "Transport file data (mashup)",
+             "Regional HQ, station name, coordinates, number of exits",
+             "Nearest KORAIL station to the forest in a straight line (within 30 km). Whether and how often trains stop is not in the data",
+             "Step 2 nearest train station, foreign visitor guide"),
+    "touristinfo": ("Nationwide Tourist Information Centers", "Korea Tourism Organization (KOTIS open data)", "Tourism file data (mashup)",
+                    "Center name, address, languages, phone, hours, closing days",
+                    "Addresses have no coordinates or province, so distance cannot be measured. Linked only when the address has the same town (eup/myeon) as the forest and the same phone area code (closed, highway rest-area and inactive centers excluded); otherwise blank",
+                    "Step 2 tourist information center, foreign visitor guide"),
     "kfslist": ("Korea Forest Service list of recreation forests (national, local, private)", "Korea Forest Service",
                 "Forest sector · official list on an agency website",
                 "Forest name, operator type, address, phone, website",
@@ -1385,6 +1415,47 @@ log_issue(
 )
 
 
+# (1-2) 철도역: 한국철도공사 역 위치(위도·경도) → 휴양림에서 가장 가까운 역 1곳 (30km 이내)
+rail_rows = []
+for r in csv.DictReader(open(os.path.join(RAW, "extra", "15127532.csv"), encoding="cp949", newline="")):
+    la, lo = fnum(r["위도"]), fnum(r["경도"])
+    if la and lo:
+        rail_rows.append({"name": r["역명"].strip(), "lat": la, "lng": lo})
+EXTRA_ROWS["15127532"] = len(rail_rows)
+rail_hist = Counter()
+for f in forests:
+    if not f["lat"]:
+        continue
+    st = min(rail_rows, key=lambda x: haversine(f["lat"], f["lng"], x["lat"], x["lng"]))
+    d = round(haversine(f["lat"], f["lng"], st["lat"], st["lng"]), 1)
+    if d <= 30:
+        f["rail"] = {"name": st["name"], "distKm": d, "lat": round(st["lat"], 6), "lng": round(st["lng"], 6)}
+        add_src(f, "rail")
+    rail_hist["10km 이내" if d <= 10 else "10~30km" if d <= 30 else "30km 넘음"] += 1
+report.append("## 3-5. 철도역 연결 (직선거리)\n")
+report.append(f"- 한국철도공사 역 {len(rail_rows)}곳. " + ", ".join(f"{k}: {v}곳" for k, v in rail_hist.items()) + "\n")
+
+# (1-3) 관광안내소: KOTIS 개방데이터 1,250건 중 같은 읍·면 안내소 (주소에 좌표·시도가 없어 거리 계산 불가)
+ti = json.load(open(os.path.join(RAW, "extra", "touristinfo_same_emd.json"), encoding="utf-8"))
+EXTRA_ROWS["15151450"] = 1250
+for f in forests:
+    hit = ti["byForest"].get(f["id"])
+    if hit:
+        f["infoCenters"] = hit[:2]
+        add_src(f, "touristinfo")
+ti_n = sum(1 for f in forests if f.get("infoCenters"))
+report.append(f"## 3-6. 관광안내소 연결\n\n- 같은 읍·면 안내소가 있는 휴양림 {ti_n}곳\n")
+log_issue(
+    "한국관광공사_전국관광안내소 정보",
+    "좌표가 없고 주소가 읍·면부터 시작해 시·도·시·군을 알 수 없음. 공공데이터포털에서 바로 받을 수 없고 외부 화면에서 조회해야 함",
+    f"거리로 연결할 수 없어 같은 읍·면에 있는 {ti_n}곳만 연결. 나머지 휴양림은 가까운 안내소가 있어도 빈칸",
+    "위도·경도와 전체 도로명주소(시·도·시·군 포함)를 넣고, 포털에서 파일로 내려받을 수 있게 제공",
+    en=("Nationwide Tourist Information Centers",
+        "No coordinates, and addresses start at the town level, so the province and city are unknown. Not downloadable from the portal; it must be queried on an external screen",
+        f"Cannot link by distance; only {ti_n} forests with a center in the same town are linked. Others stay blank even if a center is nearby",
+        "Add coordinates and full road addresses including province and city, and offer a file download on the portal"),
+)
+
 # (2) 이용수칙: 국립휴양림 객실 설명에서 입·퇴실 시간과 바비큐(숯불) 제한 추출
 def hour_of(txt, ampm_default):
     m = re.search(r"(오전|오후|낮|밤)?\s*(\d{1,2})\s*(?::\s*(\d{2})|시)", txt)
@@ -1527,6 +1598,8 @@ stats = {
         "toilet": len(toilet_raw["rows"]),
         "jeju": 0,
         "busstop": bus["total"],
+        "rail": EXTRA_ROWS["15127532"],
+        "touristinfo": EXTRA_ROWS["15151450"],
         **{k: EXTRA_ROWS.get(re.search(r"/data/(\d+)/", v["url"])[1], 0) for k, v in SOURCES.items()
            if k.startswith("nat") and k not in ("natfac", "natpolicy") or k in ("kidsforest", "healing")},
     },

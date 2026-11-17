@@ -15,7 +15,7 @@ const DS_GROUPS: { title: string; title_en: string; keys: string[] }[] = [
   },
   { title: "시설 관리 (산림청 국립자연휴양림관리소)", title_en: "Facility management (National Forest Recreation Service)", keys: ["natsafety", "natworks"] },
   { title: "숲길·산림복지 시설", title_en: "Trails and forest welfare facilities", keys: ["nanum", "kidsforest", "healing"] },
-  { title: "다른 기관 데이터와 결합", title_en: "Combined with other agencies' data", keys: ["toilet", "busstop", "jeju"] },
+  { title: "다른 기관 데이터와 결합", title_en: "Combined with other agencies' data", keys: ["toilet", "busstop", "rail", "touristinfo", "jeju"] },
   {
     title: "빠진 휴양림 보완 (기관 누리집 공식 목록, 공공데이터 종 수에는 넣지 않음)",
     title_en: "Filling in missing forests (official agency lists, not counted as datasets)",
@@ -80,7 +80,7 @@ export default function DataView({ lang }: { lang: Lang }) {
   const surveyPts = FORESTS.reduce((a, f) => a + (f.survey?.points.length ?? 0), 0);
   const linked = (k: string) => FORESTS.filter((f) => f.sources.includes(k)).length;
   const total = DATASET_COUNT;
-  const forestCount = Object.values(SOURCES).filter((s) => s.kind.startsWith("산림")).length;
+  const forestCount = Object.values(SOURCES).filter((s) => s.kind.startsWith("산림") && !s.notPortal).length;
   const records = Object.values(counts).reduce((a, b) => a + b, 0);
   const code = (s: string) => <code className="text-sm">{s}</code>;
 

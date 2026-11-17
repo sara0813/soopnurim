@@ -69,7 +69,7 @@
   "kidsForest": 8,
   "healing": 9
  },
- "datasetsUsed": 17,
+ "datasetsUsed": 19,
  "officialListAdded": 22,
  "officialListTotal": 205,
  "toiletTotal": 33820,
@@ -89,6 +89,8 @@
   "toilet": 33820,
   "jeju": 0,
   "busstop": 227102,
+  "rail": 202,
+  "touristinfo": 1250,
   "natintro": 47,
   "natlayout": 2158,
   "natdiscount": 319,
@@ -250,6 +252,16 @@
    "problem_en": "No data on foreigner sign-up, identity check, payment or ID at check-in; check-in times and barbecue rules exist only in free text",
    "impact_en": "Foreign visitors cannot learn from public data whether they can book or what the on-site rules are",
    "proposal_en": "Add fields for foreigner booking, accepted ID and foreign card payment, structured check-in and cooking rules, and English text"
+  },
+  {
+   "dataset": "한국관광공사_전국관광안내소 정보",
+   "problem": "좌표가 없고 주소가 읍·면부터 시작해 시·도·시·군을 알 수 없음. 공공데이터포털에서 바로 받을 수 없고 외부 화면에서 조회해야 함",
+   "impact": "거리로 연결할 수 없어 같은 읍·면에 있는 24곳만 연결. 나머지 휴양림은 가까운 안내소가 있어도 빈칸",
+   "proposal": "위도·경도와 전체 도로명주소(시·도·시·군 포함)를 넣고, 포털에서 파일로 내려받을 수 있게 제공",
+   "dataset_en": "Nationwide Tourist Information Centers",
+   "problem_en": "No coordinates, and addresses start at the town level, so the province and city are unknown. Not downloadable from the portal; it must be queried on an external screen",
+   "impact_en": "Cannot link by distance; only 24 forests with a center in the same town are linked. Others stay blank even if a center is nearby",
+   "proposal_en": "Add coordinates and full road addresses including province and city, and offer a file download on the portal"
   }
  ]
 }

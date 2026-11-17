@@ -1,4 +1,4 @@
-import { Bus, CircleCheck, CircleDashed, ExternalLink, Phone, TriangleAlert } from "lucide-react";
+import { Bus, CircleCheck, Info, TrainFront, CircleDashed, ExternalLink, Phone, TriangleAlert } from "lucide-react";
 import type { Forest, JourneyItem } from "@/lib/types";
 import { kmOf, pick, type Lang } from "@/lib/i18n";
 import { romanize } from "@/lib/romanize";
@@ -35,6 +35,8 @@ export default function ForeignGuide({ f, items, lang }: { f: Forest; items: Jou
   const rows = ["fgSignup", "fgPayment", "fgCheckinId", "fgLanguage"].map(get).filter(Boolean) as JourneyItem[];
   const rules = ["checkinTime", "fireCooking", "emergency"].map(get).filter(Boolean) as JourneyItem[];
   const stops = f.busStops ?? [];
+  const rail = f.rail;
+  const ic = f.infoCenters ?? [];
   const a = f.asean;
 
   const Row = ({ it }: { it: JourneyItem }) => {
@@ -128,6 +130,70 @@ export default function ForeignGuide({ f, items, lang }: { f: Forest; items: Jou
           </p>
         )}
         <Src k="busstop" lang={lang} />
+        <ul className="mt-3 divide-y divide-line border-t border-line">
+          <li className="py-2.5">
+            <span className="flex items-center gap-2">
+              <TrainFront aria-hidden="true" className="size-4 shrink-0 text-muted" />
+              <strong className="font-semibold">{t("가까운 철도역", "Nearest train station")}</strong>
+            </span>
+            {rail ? (
+              <p className="mt-1">
+                <span lang="ko">{rail.name}</span>
+                {t("역", "")}
+                {en && <span className="ml-1.5 text-sm text-muted">{romanize(rail.name)} Station</span>}
+                <span className="ml-2 text-sm text-muted">
+                  {t("직선", "straight line")} {kmOf(lang, rail.distKm)}
+                </span>
+              </p>
+            ) : (
+              <p className="mt-1 text-sm text-muted">
+                {t("30km 안에 한국철도공사 역이 없거나 휴양림 좌표가 없어요.", "No KORAIL station within 30 km, or the forest has no coordinates.")}
+              </p>
+            )}
+            <p className="mt-1 text-sm text-muted">
+              {t("이 역에 서는 열차와 역에서 휴양림까지 가는 방법은 데이터에 없어요.", "Which trains stop there and how to get from the station to the forest are not in the data.")}
+            </p>
+            <Src k="rail" lang={lang} />
+          </li>
+          <li className="py-2.5">
+            <span className="flex items-center gap-2">
+              <Info aria-hidden="true" className="size-4 shrink-0 text-muted" />
+              <strong className="font-semibold">{t("관광안내소", "Tourist information center")}</strong>
+            </span>
+            {ic.length ? (
+              <ul className="mt-1 space-y-1.5">
+                {ic.map((c) => (
+                  <li key={c.name}>
+                    <span lang="ko" className="font-medium">{c.name}</span>
+                    <span className="block text-sm text-muted">
+                      {[
+                        c.lang ? t(`제공 언어: ${c.lang}`, `Languages: ${c.lang}`) : t("제공 언어 정보 없음", "Languages not listed"),
+                        c.hours,
+                        c.off && t(`휴무 ${c.off}`, `Closed: ${c.off}`),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                    {c.tel && (
+                      <a href={`tel:${c.tel.split("~")[0].replace(/[^0-9]/g, "")}`} className="text-sm font-medium text-brand-strong underline underline-offset-2">
+                        {c.tel}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-1 text-sm text-muted">
+                {t(
+                  "같은 읍·면의 관광안내소가 데이터에 없어요. 안내소 데이터에 좌표가 없어 더 넓게 찾을 수 없어요.",
+                  "No tourist information center in the same town in the data. The center data has no coordinates, so we cannot search further.",
+                )}
+              </p>
+            )}
+            {en && <p className="mt-1 text-sm text-muted">Korea Travel Hotline 1330 answers in English, Japanese and Chinese, 24 hours.</p>}
+            <Src k="touristinfo" lang={lang} />
+          </li>
+        </ul>
       </Sub>
 
       <Sub title={t("이용수칙과 긴급 연락처", "House rules and emergency numbers")}>

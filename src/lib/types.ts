@@ -84,6 +84,20 @@ export interface NationalInfo {
   };
 }
 
+export interface RailStation {
+  name: string;
+  distKm: number;
+  lat: number;
+  lng: number;
+}
+export interface InfoCenter {
+  name: string;
+  addr: string;
+  lang: string;
+  tel: string;
+  hours: string;
+  off: string;
+}
 export interface BusStop {
   name: string;
   distKm: number;
@@ -181,6 +195,8 @@ export interface Forest {
   kidsPlaces?: PlaceLink;
   healingPlaces?: PlaceLink;
   busStops?: BusStop[];
+  rail?: RailStation;
+  infoCenters?: InfoCenter[];
   asean?: AseanPriority;
 }
 

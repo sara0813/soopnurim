@@ -41,6 +41,10 @@ DATASETS = {
     "healing": ("file", "15107928", "extra/15107928.csv"),
     # 22MB 원본은 커밋하지 않음(.gitignore). build_data.py가 휴양림 5km 이내 정류장만 busstop_near.json으로 남긴다.
     "busstop": ("file", "15067528", "extra/15067528.csv"),
+    # 외국인·차 없는 여행자: 가까운 철도역, 관광안내소
+    "rail": ("file", "15127532", "extra/15127532.csv"),
+    # 관광안내소(15151450)는 포털에 파일이 없고 KOTIS 개방데이터 화면으로 연결됨.
+    # 그 화면에서 조회한 1,250건 중 휴양림과 같은 읍·면 안내소만 extra/touristinfo_same_emd.json에 저장해 사용.
 }
 
 # 공중화장실(3만여 건)은 숲누림에 필요한 필드만 남겨 저장

@@ -6,7 +6,8 @@ import JourneyView from "@/components/JourneyView";
 import MapAppMenu from "@/components/MapAppMenu";
 import RoomList from "@/components/RoomList";
 import ForeignGuide from "@/components/ForeignGuide";
-import { Note, Section, Src, Sub } from "@/components/Section";
+import OpenOnHash from "@/components/OpenOnHash";
+import { Fold, Note, Src, Sub } from "@/components/Section";
 import { CORE_KEYS, SOURCES, buildJourney, getForest, lotteryOf, sourceName } from "@/lib/journey";
 import { fixedEn, href, kmOf, pick, type Lang } from "@/lib/i18n";
 import { addressEn, nameOf, placeEn, regionOf } from "@/lib/romanize";
@@ -36,39 +37,56 @@ export default function ForestView({ id, lang }: { id: string; lang: Lang }) {
   const name = nameOf(lang, f.name);
   const foresttripName = t("숲나들e", "Foresttrip (숲나들e)");
 
-  const SECTIONS: [string, string][] = en
-    ? [
-        ["info", "Overview"],
-        ["foreign", "Visitor guide"],
-        ["journey", "Journey check"],
-        ["rooms", "Rooms"],
-        ["booking", "Booking"],
-        ["nearby", "Nearby"],
-        ["manage", "Maintenance"],
-        ["sources", "Sources"],
-      ]
-    : [
-        ["info", "개요"],
-        ["journey", "여정 체크"],
-        ["rooms", "객실"],
-        ["booking", "예약·할인"],
-        ["foreign", "외국인 안내"],
-        ["nearby", "주변 시설"],
-        ["manage", "시설 관리"],
-        ["sources", "출처"],
-      ];
+  // 접힌 카드에 보일 한 줄 요약 (없는 정보는 '없음'이라 하지 않고 어디서 확인하는지 적는다)
+  const join = (xs: (string | false | null | undefined)[]) => xs.filter(Boolean).join(" · ");
+  const meta = {
+    info:
+      join([
+        f.intro?.hours && t(`운영 ${f.intro.hours}`, `Hours ${f.intro.hours}`),
+        f.admissionFee && t("입장료 있음", "Admission fee"),
+        f.facilities.length > 0 && t(`주요 시설 ${f.facilities.length}종`, `${f.facilities.length} facilities`),
+        f.capacity != null && t(`수용 ${f.capacity.toLocaleString()}명`, `capacity ${f.capacity.toLocaleString()}`),
+      ]) || t("운영기관·숙박 여부", "Operator, lodging"),
+    rooms: n?.roomList.length
+      ? t(`객실 ${n.rooms}실 · 객실별 설명과 키워드`, `${n.rooms} rooms · descriptions and keywords`)
+      : t("객실별 데이터는 국립만 공개돼요", "Room data is only published for national forests"),
+    booking:
+      join([
+        lot && lot.disabled.count > 0 && t(`장애인 추첨 ${lot.disabled.count}실`, `${lot.disabled.count} disabled-lottery rooms`),
+        b?.lottery?.avgRate != null && t(`주말 추첨 평균 ${b.lottery.avgRate} : 1`, `weekend lottery ${b.lottery.avgRate} : 1`),
+        !!f.discounts?.length && t(`할인 대상 ${f.discounts.length}개`, `${f.discounts.length} discount groups`),
+      ]) || t("우선예약·할인은 운영기관에서 확인", "Check priority booking and discounts with the operator"),
+    foreign: join([
+      t("가입·결제·신분증·언어", "Sign-up, payment, ID, language"),
+      t("대중교통", "transit"),
+      f.asean && t("아세안 우선예약", "ASEAN priority"),
+    ]),
+    nearby: f.lat
+      ? join([
+          t(`공중화장실 ${f.toilets.length}곳`, `${f.toilets.length} public toilets`),
+          t(`무장애나눔길 ${f.nanum.length}곳`, `${f.nanum.length} barrier-free trails`),
+        ])
+      : t("좌표가 없어 거리 정보가 없어요", "No coordinates, so no distances"),
+    manage:
+      f.safety || f.works
+        ? join([
+            f.safety && t(`안전점검 ${f.safety.lastDate.slice(0, 7)}`, `safety check ${f.safety.lastDate.slice(0, 7)}`),
+            f.works && t(`최근 3년 공사 ${f.works.recentCount}건`, `${f.works.recentCount} works in 3 years`),
+          ])
+        : t("국립만 공개돼요", "Only published for national forests"),
+    sources: t(`데이터 ${new Set(f.sources).size}종 · 기준일`, `${new Set(f.sources).size} datasets · dates`),
+  };
 
   const foreign = (
-    <Section
-      id="foreign"
-      title={t("외국인 이용 안내", "Guide for foreign visitors")}
-      desc={t(
-        "확인된 정보만 '확인됨'으로 표시하고, 공식 안내가 없는 내용은 '운영기관 확인 필요'로 남겨 두었어요.",
-        "Only sourced facts are marked Verified. Anything without an official source is marked 'Check with operator'.",
-      )}
-    >
+    <Fold id="foreign" title={t("외국인 이용 안내", "Guide for foreign visitors")} meta={meta.foreign} open={en}>
+      <p className="mb-4 text-sm text-muted">
+        {t(
+          "확인된 정보만 '확인됨'으로 표시하고, 공식 안내가 없는 내용은 '운영기관 확인 필요'로 남겨 두었어요.",
+          "Only sourced facts are marked Verified. Anything without an official source is marked 'Check with operator'.",
+        )}
+      </p>
       <ForeignGuide f={f} items={items} lang={lang} />
-    </Section>
+    </Fold>
   );
 
   return (
@@ -129,51 +147,41 @@ export default function ForestView({ id, lang }: { id: string; lang: Lang }) {
           {f.lat && f.lng && <MapAppMenu name={f.name} lat={f.lat} lng={f.lng} />}
         </div>
         {en && book?.foresttrip && <p className="text-xs text-muted">Foresttrip is the Korea Forest Service booking site, in Korean.</p>}
+        {f.listOnly && (
+          <p className="rounded-lg bg-surface-2 px-3 py-2 text-sm text-muted">
+            {t(
+              "공식 목록에만 있는 휴양림이라 이름·주소·전화만 있고 시설 정보는 대부분 빈칸이에요.",
+              "Only the name, address and phone are known from the official list; most facility items are blank.",
+            )}
+          </p>
+        )}
       </header>
 
-      <nav
-        aria-label={t("이 페이지 목차", "On this page")}
-        className="sticky top-0 z-[1100] -mx-4 border-b border-line bg-[var(--bg)]/95 px-4 py-2 backdrop-blur"
-      >
-        <ul className="no-scrollbar flex gap-1.5 overflow-x-auto">
-          {SECTIONS.map(([sid, label]) => (
-            <li key={sid}>
-              <a href={`#${sid}`} className="chip">
-                {label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <OpenOnHash />
 
-      {f.listOnly && (
-        <p className="rounded-xl bg-surface-2 px-4 py-3 text-sm text-muted">
-          {t(
-            "전국휴양림표준데이터와 국립자연휴양림 데이터에 없는 휴양림이라, 산림청·숲나들e 공식 목록의 이름·주소·전화만 보여 드려요. 시설 정보는 대부분 빈칸이니 운영기관에 확인해 주세요.",
-            "This forest is in neither the standard data nor the national forest data, so only the name, address and phone from the Korea Forest Service or Foresttrip list are shown. Most facility items are blank; please check with the operator.",
-          )}{" "}
-          {f.lat == null
-            ? t("좌표를 찾지 못해 지도와 주변 거리 정보가 없어요.", "No coordinates were found, so there is no map or nearby distance.")
-            : f.geoSource === "osm"
-              ? t(
-                  "지도 위치는 OpenStreetMap에서 이름·주소로 찾은 값이라 실제와 다를 수 있어요.",
-                  "The map position was found by name or address on OpenStreetMap and may be off.",
-                )
-              : t("지도 위치는 숲나들e 찾아오시는 길 지도의 좌표예요.", "The map position is from the Foresttrip directions map.")}
-        </p>
-      )}
+      {en && foreign}
 
-      {f.notInStd && (
-        <p className="rounded-xl bg-surface-2 px-4 py-3 text-sm text-muted">
-          {t(
-            "표준데이터에 없는 국립자연휴양림이라 국립자연휴양림관리소 데이터로 보여 드려요.",
-            "This national forest is missing from the standard data, so it is shown from National Forest Recreation Service data.",
-          )}
-        </p>
-      )}
+      {/* 여정 체크 + 질문 + 제보: 이 페이지의 중심 */}
+      <section id="journey" aria-labelledby="journey-h" className="scroll-mt-4">
+        <header className="mb-3">
+          <h2 id="journey-h" className="text-xl font-bold">
+            {t("여정 단계별 체크", "Journey check, step by step")}
+          </h2>
+          <p className="mt-0.5 text-sm text-muted">
+            {t(
+              "단계를 누르면 확인된 정보와 빈칸이 나와요. 빈칸은 아래에서 전화로 물어볼 질문이 돼요.",
+              "Tap a step to see what is known and what is not. 'Not verified' means no source was found, not that the facility is missing.",
+            )}
+          </p>
+        </header>
+        <JourneyView items={items} tel={f.tel} forestId={f.id} forestName={f.name} coreKeys={CORE_KEYS} />
+      </section>
 
-      {/* 개요 */}
-      <Section id="info" title={t("개요", "Overview")}>
+      <div className="space-y-2.5">
+        <p className="px-1 pt-2 text-sm font-semibold text-muted">{t("더 자세한 정보", "More details")}</p>
+
+      {/* 기본 정보 */}
+      <Fold id="info" title={t("기본 정보", "Basic information")} meta={meta.info}>
         <dl className="kv">
           <dt>{t("운영", "Operator")}</dt>
           <dd lang="ko">{f.institution || "–"}</dd>
@@ -229,8 +237,12 @@ export default function ForestView({ id, lang }: { id: string; lang: Lang }) {
               </dd>
             </>
           )}
-          <dt>{t("연락처", "Phone")}</dt>
-          <dd>{f.tel || t("공공데이터에 없음", "Not in public data")}</dd>
+          {!f.tel && (
+            <>
+              <dt>{t("연락처", "Phone")}</dt>
+              <dd>{t("공공데이터에 없음", "Not in public data")}</dd>
+            </>
+          )}
         </dl>
         {f.layoutMap && (
           <a href={f.layoutMap} target="_blank" rel="noreferrer" className="btn btn-outline mt-4 w-full sm:w-auto">
@@ -249,25 +261,10 @@ export default function ForestView({ id, lang }: { id: string; lang: Lang }) {
         {f.telSource === "natpolicy" && (
           <Note>{t("연락처는 국립자연휴양림 예약정책 데이터에서 가져왔어요.", "Phone number comes from the national forest booking policy data.")}</Note>
         )}
-      </Section>
-
-      {en && foreign}
-
-      {/* 여정 체크 + 질문 + 제보 */}
-      <Section
-        id="journey"
-        title={t("여정 단계별 체크", "Journey check, step by step")}
-        desc={t(
-          "예약부터 안전까지 단계별로 확인된 정보와 빈칸을 보여드립니다. 빈칸은 전화 질문으로 바꾸거나, 다녀온 분이 제보할 수 있습니다.",
-          "What is known and what is not, from booking to safety. 'Not verified' means no source was found, not that the facility is missing. Each blank becomes a question you can ask.",
-        )}
-        plain
-      >
-        <JourneyView items={items} tel={f.tel} forestId={f.id} forestName={f.name} coreKeys={CORE_KEYS} />
-      </Section>
+      </Fold>
 
       {/* 객실 */}
-      <Section id="rooms" title={n ? t(`객실 ${n.rooms}실`, `Rooms (${n.rooms})`) : t("객실", "Rooms")}>
+      <Fold id="rooms" title={t("객실", "Rooms")} meta={meta.rooms}>
         {n && n.roomList.length ? (
           <>
             <RoomList rooms={n.roomList} />
@@ -296,10 +293,10 @@ export default function ForestView({ id, lang }: { id: string; lang: Lang }) {
             {t("에서 확인해 주세요.", ".")}
           </p>
         )}
-      </Section>
+      </Fold>
 
       {/* 예약·할인 */}
-      <Section id="booking" title={t("예약·할인", "Booking and discounts")}>
+      <Fold id="booking" title={t("예약·할인", "Booking and discounts")} meta={meta.booking}>
         <div className="space-y-5">
           {lot ? (
             <Sub title={t("우선·추첨 예약 객실", "Priority and lottery rooms")}>
@@ -474,19 +471,18 @@ export default function ForestView({ id, lang }: { id: string; lang: Lang }) {
             </p>
           ) : null}
         </div>
-      </Section>
+      </Fold>
 
       {!en && foreign}
 
       {/* 주변 시설 */}
-      <Section
-        id="nearby"
-        title={t("주변 시설", "Nearby")}
-        desc={t(
-          "공통 ID가 없어 좌표 거리나 이름·주소로 연결했습니다. 휴양림 안의 시설인지는 확인이 필요합니다.",
-          "Linked by distance or by name and address, since there is no shared ID. Whether a place is inside the forest needs checking.",
-        )}
-      >
+      <Fold id="nearby" title={t("주변 시설", "Nearby")} meta={meta.nearby}>
+        <p className="mb-4 text-sm text-muted">
+          {t(
+            "공통 ID가 없어 좌표 거리나 이름·주소로 연결했어요. 휴양림 안의 시설인지는 확인이 필요해요.",
+            "Linked by distance or by name and address, since there is no shared ID. Whether a place is inside the forest needs checking.",
+          )}
+        </p>
         <div className="space-y-5">
           <Sub title={t("공중화장실 (휴양림 좌표 1.5km 이내)", "Public toilets (within 1.5 km)")}>
             {f.toilets.length ? (
@@ -571,17 +567,18 @@ export default function ForestView({ id, lang }: { id: string; lang: Lang }) {
             </Sub>
           )}
         </div>
-      </Section>
+      </Fold>
 
       {/* 시설 관리: 안전점검·공사 이력 */}
-      <Section
-        id="manage"
-        title={t("시설 관리 기록", "Maintenance records")}
-        desc={t(
-          "운영기관이 직접 기록한 안전점검과 공사 이력입니다. 시설의 현재 상태를 보증하지는 않습니다.",
-          "Safety checks and works recorded by the operator. They do not guarantee the current condition.",
+      <Fold id="manage" title={t("시설 관리 기록", "Maintenance records")} meta={meta.manage}>
+        {(f.safety || f.works) && (
+          <p className="mb-4 text-sm text-muted">
+            {t(
+              "운영기관이 직접 기록한 안전점검과 공사 이력이에요. 시설의 현재 상태를 보증하지는 않아요.",
+              "Safety checks and works recorded by the operator. They do not guarantee the current condition.",
+            )}
+          </p>
         )}
-      >
         {f.safety || f.works ? (
           <div className="space-y-5">
             {f.safety && (
@@ -643,9 +640,30 @@ export default function ForestView({ id, lang }: { id: string; lang: Lang }) {
             )}
           </p>
         )}
-      </Section>
+      </Fold>
 
-      <Section id="sources" title={t("이 페이지의 데이터 출처", "Data sources for this page")}>
+      <Fold id="sources" title={t("데이터 출처", "Data sources")} meta={meta.sources}>
+        {(f.listOnly || f.notInStd) && (
+          <p className="mb-3 rounded-lg bg-surface-2 px-3 py-2 text-sm text-muted">
+            {f.listOnly
+              ? t(
+                  "전국휴양림표준데이터와 국립자연휴양림 데이터에 없는 휴양림이라 산림청·숲나들e 공식 목록의 이름·주소·전화를 썼어요. ",
+                  "This forest is in neither the standard data nor the national forest data, so the name, address and phone come from the Korea Forest Service or Foresttrip list. ",
+                ) +
+                (f.lat == null
+                  ? t("좌표를 찾지 못해 지도와 주변 거리 정보가 없어요.", "No coordinates were found, so there is no map or nearby distance.")
+                  : f.geoSource === "osm"
+                    ? t(
+                        "지도 위치는 OpenStreetMap에서 이름·주소로 찾은 값이라 실제와 다를 수 있어요.",
+                        "The map position was found by name or address on OpenStreetMap and may be off.",
+                      )
+                    : t("지도 위치는 숲나들e 찾아오시는 길 지도의 좌표예요.", "The map position is from the Foresttrip directions map."))
+              : t(
+                  "표준데이터에 없는 국립자연휴양림이라 국립자연휴양림관리소 데이터로 보여 드려요.",
+                  "This national forest is missing from the standard data, so it is shown from National Forest Recreation Service data.",
+                )}
+          </p>
+        )}
         <ul className="space-y-1.5 text-sm">
           {[...new Set(f.sources)].map((s) => (
             <li key={s} className="flex flex-wrap gap-x-2">
@@ -673,12 +691,20 @@ export default function ForestView({ id, lang }: { id: string; lang: Lang }) {
             )}
           </Note>
         )}
+        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 border-t border-line pt-3 text-xs text-muted">
+          <span className="font-semibold">{t("출처 표시", "Source labels")}</span>
+          <span className="src src-public">{t("공공데이터", "Public data")}</span>
+          <span className="src src-operator">{t("운영자 확인", "Operator checked")}</span>
+          <span className="src src-user">{t("이용자 제보", "Visitor report")}</span>
+          <span className="src src-web">{t("온라인 자료 참고", "Online reference")}</span>
+        </div>
         <p className="mt-3 text-sm">
           <Link href={href(lang, "/data")} className="font-medium text-brand-strong underline underline-offset-2">
             {t("데이터 출처와 가공 방법 전체 보기", "All data sources and processing")}
           </Link>
         </p>
-      </Section>
+      </Fold>
+      </div>
     </article>
   );
 }

@@ -231,6 +231,50 @@ export function buildJourney(f: Forest, lang: Lang = "ko"): JourneyItem[] {
         }),
   });
 
+  const rs = f.rail;
+  add({
+    key: "railStation",
+    step: 2,
+    label: t("가까운 철도역", "Nearest train station"),
+    groups: FG,
+    ...q(
+      "가장 가까운 기차역에서 휴양림까지 버스나 택시로 갈 수 있나요? 픽업이 있나요?",
+      "Can I get from the nearest train station to the forest by bus or taxi? Is there a pick-up?",
+    ),
+    ...(rs
+      ? {
+          status: "ok" as const,
+          value: t(
+            `한국철도공사 '${rs.name}역' 직선 ${km(rs.distKm)}. 이 역에 서는 열차·횟수는 데이터에 없음`,
+            `KORAIL '${rs.name}' station (${romanize(rs.name)}), ${km(rs.distKm)} in a straight line. Which trains stop there is not in the data`,
+          ),
+          ...pub("rail"),
+        }
+      : {}),
+  });
+  const ic = f.infoCenters ?? [];
+  add({
+    key: "fgInfoCenter",
+    step: 2,
+    label: t("관광안내소(외국어)", "Tourist information center"),
+    groups: FG,
+    ...q(
+      "근처 관광안내소에서 휴양림 가는 길이나 예약을 외국어로 안내받을 수 있나요?",
+      "Can a nearby tourist information center help in English with directions or booking?",
+    ),
+    ...(ic[0]
+      ? {
+          status: (ic[0].lang && !/^(한|한국어)$/.test(ic[0].lang) ? "ok" : "warn") as Status,
+          value:
+            t(`같은 읍·면에 '${ic[0].name}'`, `'${ic[0].name}' in the same town`) +
+            (ic[0].lang ? t(` (제공 언어: ${ic[0].lang})`, ` (languages: ${ic[0].lang})`) : t(" (제공 언어 정보 없음)", " (languages not listed)")) +
+            (ic[0].hours ? t(`, ${ic[0].hours}`, `, ${ic[0].hours}`) : "") +
+            (ic[0].tel ? `, ${ic[0].tel}` : ""),
+          ...pub("touristinfo"),
+        }
+      : {}),
+  });
+
   // 3 진입로
   const slopePts = surveyHas(/턱|경사|계단/);
   add({

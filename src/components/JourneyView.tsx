@@ -102,7 +102,6 @@ export default function JourneyView({
           </p>
         )}
         <CoverageBar known={known} total={rel.length} size="lg" />
-        <Legend t={t} />
       </div>
 
       {rs?.mode === "error" && (
@@ -118,9 +117,9 @@ export default function JourneyView({
           </button>
         </p>
       )}
-      {rs && rs.mode !== "error" && <LensPanel forestId={forestId} onDone={load} />}
 
-      <ol className="space-y-3">
+      {/* 단계는 접어 두고 확인·빈칸 수만 보여 준다. 누르면 항목과 출처가 펼쳐진다 */}
+      <ol className="card divide-y divide-line overflow-hidden">
         {STEPS.map((s) => {
           const its = rel.filter((i) => i.step === s.step);
           if (!its.length) return null;
@@ -128,62 +127,58 @@ export default function JourneyView({
           const blank = its.filter((i) => i.status === "unknown");
           const repN = its.reduce((n, i) => n + (byItem.get(i.key)?.length ?? 0), 0);
           return (
-            <li key={s.step} className="card overflow-hidden">
-              <h3 className="flex items-center gap-3 border-b border-line bg-surface-2 px-4 py-3">
-                <span
-                  aria-hidden="true"
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-fill text-sm font-bold text-white"
-                >
-                  {s.step}
-                </span>
-                <span className="text-lg font-bold">{lang === "en" ? s.title_en : s.title}</span>
-                <span className="ml-auto text-xs text-muted">
-                  {t(`확인 ${filled.length} · 빈칸 ${blank.length}`, `${filled.length} found · ${blank.length} not verified`)}
-                  {repN > 0 && t(` · 제보 ${repN}`, ` · ${repN} report(s)`)}
-                </span>
-              </h3>
-              <div className="px-4">
-                {filled.length > 0 && (
-                  <ul className="divide-y divide-line">
-                    {filled.map((it) => (
-                      <ItemRow key={it.key} it={it} reports={byItem.get(it.key)} forestId={forestId} onDone={load} mode={rs?.mode} />
-                    ))}
-                  </ul>
-                )}
-                {blank.length > 0 && (
-                  <details className={`${filled.length ? "border-t border-line" : ""}`} open={filled.length === 0 && blank.length <= 2}>
-                    <summary className="flex min-h-12 cursor-pointer items-center gap-2 py-2 text-sm">
-                      <CircleDashed aria-hidden="true" className="size-4 shrink-0 text-blank" />
-                      <span className="font-semibold">{t(`빈칸 ${blank.length}개`, `${blank.length} not verified`)}</span>
-                      <span className="min-w-0 truncate text-muted">{blank.map((b) => b.label).join(", ")}</span>
-                      <ChevronDown aria-hidden="true" className="chev ml-auto size-4 shrink-0 text-muted" />
-                    </summary>
-                    <ul className="divide-y divide-line border-t border-dashed border-line">
-                      {blank.map((it) => (
+            <li key={s.step}>
+              <details id={`step-${s.step}`} className="scroll-mt-4">
+                <summary className="flex min-h-16 cursor-pointer items-center gap-3 px-4 py-3 hover:bg-surface-2">
+                  <span
+                    aria-hidden="true"
+                    className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-fill text-sm font-bold text-white"
+                  >
+                    {s.step}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <h3 className="font-bold leading-snug">{lang === "en" ? s.title_en : s.title}</h3>
+                    <span className="block text-xs text-muted">{lang === "en" ? s.desc_en : s.desc}</span>
+                  </span>
+                  <span className="shrink-0 text-right text-xs tabular-nums">
+                    <span className="block font-semibold">{t(`확인 ${filled.length}`, `${filled.length} found`)}</span>
+                    <span className="block text-muted">
+                      {t(`빈칸 ${blank.length}`, `${blank.length} blank`)}
+                      {repN > 0 && t(` · 제보 ${repN}`, ` · ${repN} rep.`)}
+                    </span>
+                  </span>
+                  <ChevronDown aria-hidden="true" className="chev size-5 shrink-0 text-muted" />
+                </summary>
+                <div className="border-t border-line bg-[var(--bg)] px-4">
+                  {filled.length > 0 && (
+                    <ul className="divide-y divide-line">
+                      {filled.map((it) => (
                         <ItemRow key={it.key} it={it} reports={byItem.get(it.key)} forestId={forestId} onDone={load} mode={rs?.mode} />
                       ))}
                     </ul>
-                  </details>
-                )}
-              </div>
+                  )}
+                  {blank.length > 0 && (
+                    <div className={filled.length ? "border-t border-dashed border-line-strong" : ""}>
+                      <p className="flex items-center gap-1.5 pt-3 text-xs font-semibold text-muted">
+                        <CircleDashed aria-hidden="true" className="size-3.5 text-blank" />
+                        {t(`공공데이터에 없는 항목 ${blank.length}개`, `${blank.length} not in public data`)}
+                      </p>
+                      <ul className="divide-y divide-line">
+                        {blank.map((it) => (
+                          <ItemRow key={it.key} it={it} reports={byItem.get(it.key)} forestId={forestId} onDone={load} mode={rs?.mode} />
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </details>
             </li>
           );
         })}
       </ol>
 
       <PhoneQuestions questions={questions} tel={tel} forestName={forestName} />
-    </div>
-  );
-}
-
-function Legend({ t }: { t: (ko: string, en: string) => string }) {
-  return (
-    <div className="flex flex-wrap gap-x-3 gap-y-1.5 border-t border-line pt-3 text-xs text-muted">
-      <span className="font-semibold">{t("출처 표시", "Sources")}</span>
-      <span className="src src-public">{t("공공데이터", "Public data")}</span>
-      <span className="src src-operator">{t("운영자 확인", "Operator checked")}</span>
-      <span className="src src-user">{t("이용자 제보", "Visitor report")}</span>
-      <span className="src src-web">{t("온라인 자료 참고", "Online reference")}</span>
+      {rs && rs.mode !== "error" && <LensPanel forestId={forestId} onDone={load} />}
     </div>
   );
 }
@@ -238,10 +233,7 @@ function ItemRow({
             {t("참고 자료 열기", "Open reference")} <ExternalLink aria-hidden="true" className="size-3" />
           </a>
         </p>
-      ) : (
-        it.status === "unknown" &&
-        !it.value && <p className="mt-1 text-sm text-muted">{t("공공데이터에 이 정보가 없습니다.", "This is not in public data.")}</p>
-      )}
+      ) : null}
 
       {it.web && it.web.length > 0 && (
         <ul className="mt-2 space-y-1.5">
