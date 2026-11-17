@@ -26,6 +26,7 @@ import CoverageBar from "./CoverageBar";
 import GroupPicker from "./GroupPicker";
 import type { MapLayers } from "./ForestMap";
 import { bookingLink } from "@/lib/booking";
+import { sidoOptions, sidoRank, sidoShort } from "@/lib/regions";
 import { coverage } from "@/lib/coverage";
 import { groupsMask } from "@/lib/groups";
 import { useGroups } from "@/lib/useGroups";
@@ -121,20 +122,31 @@ export default function Explorer({
     setLimit(PAGE);
   };
 
-  const sidos = useMemo(() => [...new Set(forests.map((f) => f.sido).filter(Boolean))].sort(), [forests]);
-  const sggs = useMemo(
-    () => [...new Set(forests.filter((f) => f.sido === st.sido).map((f) => f.sigungu).filter(Boolean))].sort(),
-    [forests, st.sido],
-  );
-
-  const rows = useMemo(() => {
+  // 검색어·조건을 적용한 휴양림 (지역 선택 전). 시·도·시·군·구 옆 숫자도 이 기준으로 센다.
+  const base = useMemo(() => {
     const kw = st.q.trim().replace(/\s/g, "");
     const active = CHIPS.filter((c) => st.chips.includes(c.id));
-    const out = forests
-      .filter((f) => !kw || (f.name + f.address + f.sido + f.sigungu).replace(/\s/g, "").includes(kw))
+    return forests
+      .filter((f) => !kw || (f.name + f.address + f.sido + sidoShort(f.sido) + f.sigungu).replace(/\s/g, "").includes(kw))
+      .filter((f) => active.every((c) => c.test(f)));
+  }, [forests, st.q, st.chips]);
+  const sidos = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const f of forests) if (f.sido && !counts.has(f.sido)) counts.set(f.sido, 0);
+    for (const f of base) if (f.sido) counts.set(f.sido, (counts.get(f.sido) ?? 0) + 1);
+    return sidoOptions(counts);
+  }, [forests, base]);
+  const sggs = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const f of forests) if (f.sido === st.sido && f.sigungu && !counts.has(f.sigungu)) counts.set(f.sigungu, 0);
+    for (const f of base) if (f.sido === st.sido && f.sigungu) counts.set(f.sigungu, (counts.get(f.sigungu) ?? 0) + 1);
+    return [...counts].sort((a, b) => a[0].localeCompare(b[0], "ko")).map(([name, count]) => ({ name, count }));
+  }, [forests, base, st.sido]);
+
+  const rows = useMemo(() => {
+    const out = base
       .filter((f) => !st.sido || f.sido === st.sido)
       .filter((f) => !st.sgg || f.sigungu === st.sgg)
-      .filter((f) => active.every((c) => c.test(f)))
       .map((f) => ({
         f,
         cov: coverage(f.items, mask),
@@ -145,11 +157,11 @@ export default function Explorer({
       if (st.sort === "distance" && a.dist != null && b.dist != null) return a.dist - b.dist;
       if (st.sort === "coverage") return b.cov.known / b.cov.total - a.cov.known / a.cov.total || byName(a, b);
       if (st.sort === "region")
-        return (a.f.sido + a.f.sigungu).localeCompare(b.f.sido + b.f.sigungu, "ko") || byName(a, b);
+        return sidoRank(a.f.sido) - sidoRank(b.f.sido) || a.f.sigungu.localeCompare(b.f.sigungu, "ko") || byName(a, b);
       return byName(a, b);
     });
     return out;
-  }, [forests, st, mask, myLoc]);
+  }, [base, st.sido, st.sgg, st.sort, mask, myLoc]);
 
   const locate = () => {
     if (!("geolocation" in navigator)) {
@@ -246,9 +258,11 @@ export default function Explorer({
             <label className="flex flex-col gap-1">
               <span className="label">시·도</span>
               <select value={st.sido} onChange={(e) => update({ sido: e.target.value, sgg: "" })} className="field">
-                <option value="">전국</option>
+                <option value="">전국 ({base.length}곳)</option>
                 {sidos.map((s) => (
-                  <option key={s}>{s}</option>
+                  <option key={s.name} value={s.name} disabled={s.count === 0 && s.name !== st.sido}>
+                    {s.short} ({s.count}곳)
+                  </option>
                 ))}
               </select>
             </label>
@@ -260,9 +274,11 @@ export default function Explorer({
                 className="field disabled:opacity-50"
                 disabled={!st.sido}
               >
-                <option value="">{st.sido ? "전체" : "시·도 먼저 선택"}</option>
+                <option value="">{st.sido ? `전체 (${sidos.find((x) => x.name === st.sido)?.count ?? 0}곳)` : "시·도 먼저 선택"}</option>
                 {sggs.map((s) => (
-                  <option key={s}>{s}</option>
+                  <option key={s.name} value={s.name} disabled={s.count === 0 && s.name !== st.sgg}>
+                    {s.name} ({s.count}곳)
+                  </option>
                 ))}
               </select>
             </label>
