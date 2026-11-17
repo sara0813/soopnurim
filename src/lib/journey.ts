@@ -1,10 +1,12 @@
 /**
  * 산림공공데이터 → 여정 단계(①~⑥)별 확인 항목 변환.
  * 원칙: "이용 가능" 판정을 하지 않고, 항목별로 무엇이 확인됐고 무엇이 빈칸인지만 표시한다.
+ *       데이터에 없다는 사실은 '없음'이 아니라 빈칸으로 둔다.
  */
 import raw from "@/data/forests.json";
 import operatorRaw from "@/data/operator_checks.json";
-import type { Forest, ForestSummary, Group, JourneyItem, SourceInfo, Status } from "./types";
+import webRaw from "@/data/web_checks.json";
+import type { Forest, ForestSummary, Group, JourneyItem, Lottery, SourceInfo, Status, WebNote } from "./types";
 import { groupsMask } from "./groups";
 
 export const SOURCES = raw.sources as Record<string, SourceInfo>;
@@ -15,21 +17,41 @@ const OPERATOR = Object.fromEntries(
   Object.entries(operatorRaw as Record<string, unknown>).filter(([k]) => !k.startsWith("_")),
 ) as Record<string, OperatorEntry>;
 
-const ALL: Group[] = ["wheelchair", "elder", "child"];
+const WEB = Object.fromEntries(
+  Object.entries(webRaw as Record<string, unknown>).filter(([k]) => !k.startsWith("_")),
+) as Record<string, WebNote[]>;
 
-function pub(key: "std" | "nanum" | "natfac" | "jeju", f?: Forest) {
+
+const ALL: Group[] = ["wheelchair", "elder", "child"];
+type SrcKey = string;
+
+function pub(key: SrcKey, date?: string) {
   const s = SOURCES[key];
-  const date = key === "std" ? f?.refDate : key === "jeju" ? f?.survey?.refDate : s.refDate;
-  return { source: "public" as const, sourceLabel: s.name, sourceDate: date, sourceUrl: s.url };
+  return { source: "public" as const, sourceLabel: s.name, sourceDate: date ?? s.refDate, sourceUrl: s.url };
 }
 
-const km = (d: number) => (d < 0.05 ? "50m 미만" : d < 1 ? `${Math.round(d * 1000)}m` : `${d.toFixed(1)}km`);
+export const km = (d: number) => (d < 0.05 ? "50m 미만" : d < 1 ? `${Math.round(d * 1000)}m` : `${d.toFixed(1)}km`);
+
+export function lotteryOf(f: Forest): Lottery | null {
+  return f.national?.lottery ?? f.policyOnly ?? null;
+}
+
+/** 이용자 유형별로 먼저 물어볼 핵심 항목 (전화 한 통에 다 묻기 어려우므로 우선순위) */
+export const CORE_KEYS: Record<Group, string[]> = {
+  wheelchair: ["roomEntrance", "accessibleToilet", "pathStepSlope", "disabledParking", "bathroomGrab"],
+  elder: ["indoorStairs", "bedType", "parkingToRoom", "toiletDistance", "restArea"],
+  child: ["diaperNursing", "parkingToRoom", "childHazard", "trailDetail", "kidsForest"],
+};
 
 export function buildJourney(f: Forest): JourneyItem[] {
   const n = f.national;
+  const lot = lotteryOf(f);
   const nanum0 = f.nanum[0];
   const pts = f.survey?.points ?? [];
   const surveyHas = (re: RegExp) => pts.filter((p) => re.test(p.detail) || re.test(p.info));
+  const stdDate = f.refDate;
+  const safety = (k: string) => f.safety?.items.find((s) => s.key === k);
+  const kids = f.kidsPlaces;
 
   const items: JourneyItem[] = [];
   const add = (it: Omit<JourneyItem, "status"> & { status?: Status }) =>
@@ -39,11 +61,11 @@ export function buildJourney(f: Forest): JourneyItem[] {
   add({
     key: "parking",
     step: 1,
-    label: "주차장 규모",
+    label: "주차",
     groups: ALL,
     question: "주차장은 몇 대 정도 주차할 수 있나요? 성수기에도 자리가 있나요?",
     ...(n?.parkingFreeMax
-      ? { status: "ok", value: `객실당 무료 주차 최대 ${n.parkingFreeMax}대 (전체 주차장 규모는 미표기)`, ...pub("natfac") }
+      ? { status: "ok", value: `객실당 무료 주차 최대 ${n.parkingFreeMax}대 (전체 주차장 규모는 데이터에 없음)`, ...pub("natfac") }
       : {}),
   });
   add({
@@ -58,7 +80,10 @@ export function buildJourney(f: Forest): JourneyItem[] {
     step: 1,
     label: "주차장에서 숙소까지 거리",
     groups: ["elder", "child"],
-    question: "주차장에서 숙소까지 걸어서 몇 분 정도인가요? 숙소 앞까지 차가 들어갈 수 있나요?",
+    question: "주차장에서 숙소까지 걸어서 몇 분인가요? 숙소 앞까지 차가 들어갈 수 있나요?",
+    ...(f.layoutMap
+      ? { value: "전체 배치도 이미지로 주차장·객실 위치를 미리 볼 수 있음 (거리·경사는 배치도에 없음)", ...pub("natlayout"), sourceUrl: f.layoutMap }
+      : {}),
   });
 
   // ② 진입로
@@ -73,7 +98,7 @@ export function buildJourney(f: Forest): JourneyItem[] {
       ? {
           status: "warn",
           value: `현장조사에서 턱·경사·계단 ${slopePts.length}곳 기록 (예: ${slopePts[0].place} – ${slopePts[0].detail || slopePts[0].info})`,
-          ...pub("jeju", f),
+          ...pub("jeju", f.survey?.refDate),
         }
       : {}),
   });
@@ -83,6 +108,12 @@ export function buildJourney(f: Forest): JourneyItem[] {
     label: "계단 손잡이",
     groups: ["elder"],
     question: "숙소나 화장실로 가는 길의 계단에 손잡이가 있나요?",
+    ...(safety("stairsNonSlip")
+      ? {
+          value: `운영기관 월별 안전점검에서 '계단 미끄럼방지 처리' ${safety("stairsNonSlip")!.result}. 손잡이는 점검 항목에 없음`,
+          ...pub("natsafety", safety("stairsNonSlip")!.date),
+        }
+      : {}),
   });
 
   // ③ 숙소
@@ -90,44 +121,66 @@ export function buildJourney(f: Forest): JourneyItem[] {
     add({
       key: "stay",
       step: 3,
-      label: "숙박 가능 여부",
+      label: "숙박",
       groups: ALL,
       status: "no",
       value: "숙박시설 없음 (당일 방문)",
       question: "",
-      ...pub("std", f),
+      ...pub("std", stdDate),
     });
   } else {
     add({
       key: "stay",
       step: 3,
-      label: "숙박 가능 여부",
+      label: "숙박",
       groups: ALL,
       question: "숙박할 수 있는 객실이 있나요?",
       ...(n?.rooms
         ? { status: "ok", value: `숙박 객실 ${n.rooms}실, 야영 ${n.camps}면`, ...pub("natfac") }
         : f.stay
-          ? { status: "ok", value: "숙박 가능", ...pub("std", f) }
+          ? { status: "ok", value: "숙박 가능", ...pub("std", stdDate) }
           : {}),
     });
   }
-  const hasRooms = f.stay !== false;
-  if (hasRooms) {
+  if (f.stay !== false) {
+    const dl = lot?.disabled.count ?? 0;
+    const dp = n?.disabledPriorityRooms ?? 0;
     add({
       key: "disabledRoom",
       step: 3,
-      label: "장애인 객실",
+      label: "장애인 추첨·우선예약 객실",
       groups: ["wheelchair"],
-      question: "장애인 객실(또는 장애인 우선예약 객실)이 있나요? 몇 실인가요?",
-      ...(n && n.disabledPriorityRooms > 0
+      question: "장애인 객실(또는 장애인 추첨·우선예약 객실)이 있나요? 그 객실은 문턱 없이 휠체어로 들어갈 수 있나요?",
+      ...(dl > 0
         ? {
             status: "ok",
-            value: `장애인 우선예약 객실 ${n.disabledPriorityRooms}실 (${n.disabledPriorityNames.slice(0, 3).join(", ")}${n.disabledPriorityRooms > 3 ? " 등" : ""})`,
-            ...pub("natfac"),
+            value: `장애인 추첨제 대상 객실 ${dl}실 (${lot!.disabled.rooms.slice(0, 3).join(", ")}${dl > 3 ? " 등" : ""}). 추첨 대상일 뿐, 객실 구조(문턱·욕실)는 데이터에 없음`,
+            ...pub("natpolicy"),
           }
-        : n
-          ? { value: "국립휴양림 객실 설명에 장애인 객실 표기 없음" }
-          : {}),
+        : dp > 0
+          ? {
+              status: "ok",
+              value: `객실 설명에 '장애인 우선예약' 표기 ${dp}실. 객실 구조(문턱·욕실)는 데이터에 없음`,
+              ...pub("natfac"),
+            }
+          : n
+            ? { value: "국립휴양림 객실·예약 데이터에 장애인 대상 객실 표기 없음", ...pub("natfac") }
+            : {}),
+    });
+    const dd = (f.discounts ?? []).filter((d) => d.group === "장애인");
+    add({
+      key: "disabledDiscount",
+      step: 3,
+      label: "장애인 이용료 할인",
+      groups: ["wheelchair"],
+      question: "장애인 할인이 있나요? 할인율과 필요한 증빙은 무엇인가요?",
+      ...(dd.length
+        ? {
+            status: "ok",
+            value: dd.map((d) => `${d.target} 비수기 평일 ${d.offWeekday}%·주말 ${d.offWeekend}%, 성수기 ${d.peakWeekday}%`).join(" / ") + " (객실 시설 사용료 기준)",
+            ...pub("natdiscount"),
+          }
+        : {}),
     });
     add({
       key: "roomEntrance",
@@ -143,13 +196,9 @@ export function buildJourney(f: Forest): JourneyItem[] {
       groups: ["elder"],
       question: "침대가 있는 객실이 있나요? 몇 실인가요?",
       ...(n && n.bedRooms > 0
-        ? {
-            status: "ok",
-            value: `객실 설명에 침대 언급 ${n.bedRooms}실 (${n.bedRoomNames.slice(0, 3).join(", ")})`,
-            ...pub("natfac"),
-          }
+        ? { status: "ok", value: `객실 설명에 침대 언급 ${n.bedRooms}실 (${n.bedRoomNames.slice(0, 3).join(", ")})`, ...pub("natfac") }
         : n
-          ? { value: `객실 설명에 침대 언급 없음 (온돌 언급 ${n.ondolRooms}실)` }
+          ? { value: `객실 설명에 침대 언급 없음 (온돌 언급 ${n.ondolRooms}실)`, ...pub("natfac") }
           : {}),
     });
     add({
@@ -179,29 +228,45 @@ export function buildJourney(f: Forest): JourneyItem[] {
       label: "난간·추락 위험",
       groups: ["child"],
       question: "객실이나 테라스에 아이가 떨어질 위험이 있는 곳(낮은 난간, 다락 계단)이 있나요?",
+      ...(safety("playground")?.result === "예"
+        ? { value: "어린이 놀이시설 월 1회 안전검사 '예' (운영기관 자체 점검). 객실 난간 정보는 없음", ...pub("natsafety", safety("playground")!.date) }
+        : {}),
     });
   }
 
   // ④ 화장실
-  const surveyToilet = f.survey?.accessibleToilet;
+  const dt = f.toilets.find((t) => t.disabled > 0);
+  const ct = f.toilets.find((t) => t.child > 0);
   add({
     key: "accessibleToilet",
     step: 4,
     label: "장애인 화장실",
     groups: ["wheelchair"],
     question: "장애인 화장실이 있나요? 객실 안인가요, 관리동이나 공용 화장실인가요?",
-    ...(surveyToilet
+    ...(f.survey?.accessibleToilet
       ? {
           status: "ok",
           value: `현장조사: ${surveyHas(/장애인화장실/)
             .map((p) => p.place)
             .slice(0, 3)
             .join(", ")}`,
-          ...pub("jeju", f),
+          ...pub("jeju", f.survey.refDate),
         }
-      : f.facilityHints.accessibleToilet
-        ? { status: "ok", value: "주요시설명에 '장애인화장실' 표기", ...pub("std", f) }
-        : {}),
+      : dt && dt.distKm <= 0.5
+        ? {
+            status: "ok",
+            value: `공중화장실 '${dt.name}' 장애인용 대변기 ${dt.disabled}개 (직선 ${km(dt.distKm)})`,
+            ...pub("toilet", dt.refDate),
+          }
+        : f.facilityHints.accessibleToilet
+          ? { status: "ok", value: "주요시설명에 '장애인화장실' 표기", ...pub("std", stdDate) }
+          : dt
+            ? {
+                status: "warn",
+                value: `직선 ${km(dt.distKm)} 떨어진 공중화장실 '${dt.name}'에 장애인용 대변기 ${dt.disabled}개 – 휴양림 안인지 확인 필요`,
+                ...pub("toilet", dt.refDate),
+              }
+            : {}),
   });
   add({
     key: "toiletDistance",
@@ -216,6 +281,12 @@ export function buildJourney(f: Forest): JourneyItem[] {
     label: "기저귀 교환대·수유실",
     groups: ["child"],
     question: "기저귀 교환대나 수유실이 있나요? 어느 건물에 있나요?",
+    ...(ct
+      ? {
+          value: `근처 공중화장실 '${ct.name}'에 어린이용 변기 ${ct.child}개 (직선 ${km(ct.distKm)}). 기저귀 교환대 정보는 공공데이터에 없음`,
+          ...pub("toilet", ct.refDate),
+        }
+      : {}),
   });
 
   // ⑤ 숲길
@@ -228,7 +299,7 @@ export function buildJourney(f: Forest): JourneyItem[] {
     ...(nanum0 && nanum0.distKm <= 0.5
       ? {
           status: "ok",
-          value: `'${nanum0.name}' ${nanum0.lengthM ? `${nanum0.lengthM.toLocaleString()}m` : ""} (${nanum0.year}년 조성, 직선 ${km(nanum0.distKm)})`,
+          value: `'${nanum0.name}' ${nanum0.lengthM ? `${nanum0.lengthM.toLocaleString()}m` : ""} (${nanum0.year}년 조성, 휴양림 좌표에서 직선 ${km(nanum0.distKm)})`,
           ...pub("nanum"),
         }
       : nanum0
@@ -238,9 +309,8 @@ export function buildJourney(f: Forest): JourneyItem[] {
             ...pub("nanum"),
           }
         : f.facilityHints.barrierFreeTrail
-          ? { status: "ok", value: "주요시설명에 무장애 산책로 표기", ...pub("std", f) }
-          : // 데이터에 없다는 것은 '없음'이 확인된 것이 아니므로 빈칸으로 둔다
-            { value: "무장애나눔길 조성정보 데이터에는 반경 3km 안에 등록된 길이 없음" }),
+          ? { status: "ok", value: "주요시설명에 무장애 산책로 표기", ...pub("std", stdDate) }
+          : { value: "무장애나눔길 조성정보에는 반경 3km 안에 등록된 길이 없음", ...pub("nanum") }),
   });
   const widthPts = surveyHas(/폭|경사구간|데크/);
   add({
@@ -256,7 +326,7 @@ export function buildJourney(f: Forest): JourneyItem[] {
             .slice(0, 3)
             .map((p) => `${p.place}: ${p.detail}`)
             .join(" / "),
-          ...pub("jeju", f),
+          ...pub("jeju", f.survey?.refDate),
         }
       : {}),
   });
@@ -267,9 +337,7 @@ export function buildJourney(f: Forest): JourneyItem[] {
     label: "쉼터·벤치",
     groups: ["elder"],
     question: "산책로 중간에 쉴 수 있는 벤치나 쉼터가 얼마나 자주 있나요?",
-    ...(restPts.length
-      ? { status: "ok", value: `현장조사 쉼터·벤치 기록 ${restPts.length}곳`, ...pub("jeju", f) }
-      : {}),
+    ...(restPts.length ? { status: "ok", value: `현장조사 쉼터·벤치 기록 ${restPts.length}곳`, ...pub("jeju", f.survey?.refDate) } : {}),
   });
   add({
     key: "kidsForest",
@@ -277,9 +345,21 @@ export function buildJourney(f: Forest): JourneyItem[] {
     label: "유아숲체험원·짧은 순환코스",
     groups: ["child"],
     question: "아이와 걷기 좋은 짧은 순환 코스나 유아숲체험원이 있나요?",
-    ...(f.facilityHints.kidsForest
-      ? { status: "ok", value: "주요시설명에 유아숲체험원·숲놀이터 표기", ...pub("std", f) }
-      : {}),
+    ...(kids?.inside.length
+      ? {
+          status: "ok",
+          value: `${kids.inside.map((p) => p.name).join(", ")} (이름으로 연결, 운영기간·참여방법은 기관 확인)`,
+          ...pub("kidsforest"),
+        }
+      : f.facilityHints.kidsForest
+        ? { status: "ok", value: "주요시설명에 유아숲체험원·숲놀이터 표기", ...pub("std", stdDate) }
+        : kids?.sameAreaCount
+          ? {
+              status: "warn",
+              value: `같은 ${f.sigungu}에 유아숲체험원 ${kids.sameAreaCount}곳 (${kids.sameArea.slice(0, 2).map((p) => p.name).join(", ")}${kids.sameAreaCount > 2 ? " 등" : ""}) – 휴양림 안은 아님`,
+              ...pub("kidsforest"),
+            }
+          : {}),
   });
 
   // ⑥ 안전
@@ -290,8 +370,19 @@ export function buildJourney(f: Forest): JourneyItem[] {
     groups: ALL,
     question: "",
     ...(f.tel
-      ? { status: "ok", value: f.tel, ...pub("std", f) }
-      : { value: "공공데이터에 전화번호 없음 – 홈페이지(숲나들e) 확인" }),
+      ? { status: "ok", value: f.tel, ...(f.telSource === "natpolicy" ? pub("natpolicy") : pub("std", stdDate)) }
+      : { value: "공공데이터에 전화번호 없음 – 홈페이지 확인" }),
+  });
+  const aed = safety("aed");
+  add({
+    key: "aed",
+    step: 6,
+    label: "자동심장충격기(AED)",
+    groups: ALL,
+    question: "자동심장충격기(AED)는 어느 건물에 있나요?",
+    ...(aed?.result === "예"
+      ? { status: "ok", value: `월별 안전점검에서 AED 관리자 지정·점검 '예' – 설치 위치는 데이터에 없음`, ...pub("natsafety", aed.date) }
+      : {}),
   });
   add({
     key: "hospital",
@@ -316,32 +407,43 @@ export function buildJourney(f: Forest): JourneyItem[] {
       }
     }
   }
+  // 온라인 자료 참고: 상태는 그대로 두고 별도 표시
+  for (const w of WEB[f.name] ?? []) {
+    const it = items.find((i) => i.key === w.item);
+    if (it) it.web = [...(it.web ?? []), w];
+  }
   return items;
-}
-
-export function relevant(items: JourneyItem[], groups: Group[]) {
-  if (!groups.length) return items;
-  return items.filter((it) => it.groups.some((g) => groups.includes(g)));
 }
 
 export function summarize(f: Forest): ForestSummary {
   const items = buildJourney(f);
   const n0 = f.nanum[0];
+  const lot = lotteryOf(f);
+  const dt = f.toilets.find((t) => t.disabled > 0);
   return {
     id: f.id,
     name: f.name,
     sido: f.sido,
+    sigungu: f.sigungu,
     address: f.address,
+    ownership: f.ownership,
     lat: f.lat,
     lng: f.lng,
     stay: f.stay,
     tel: f.tel,
-    nanumNearest: n0 ? { name: n0.name, distKm: n0.distKm, lengthM: n0.lengthM } : null,
+    closed: f.closed,
     national: !!f.national,
     survey: !!f.survey,
-    notInStd: !!f.notInStd,
+    roomCount: f.national?.rooms ?? 0,
+    disabledLotteryRooms: Math.max(lot?.disabled.count ?? 0, f.national?.disabledPriorityRooms ?? 0),
+    multiChildLotteryRooms: lot?.multiChild.count ?? 0,
+    nearestDisabledToilet: dt ? { name: dt.name, distKm: dt.distKm, count: dt.disabled } : null,
+    nanumNearest: n0 ? { name: n0.name, distKm: n0.distKm, lengthM: n0.lengthM } : null,
+    kidsForest: f.facilityHints.kidsForest || !!f.kidsPlaces?.inside.length,
+    discount: (f.discounts ?? []).some((d) => d.group === "장애인"),
+    lotteryRate: f.booking?.lottery?.avgRate ?? null,
     refDate: f.refDate,
-    sourceNames: f.sources.map((s) => SOURCES[s]?.name ?? s),
+    sourceCount: new Set(f.sources).size,
     items: items.map((it) => ({ g: groupsMask(it.groups), k: it.status === "unknown" ? 0 : 1 })),
   };
 }

@@ -1,9 +1,20 @@
 import raw from "@/data/forests.json";
-import Explorer, { type NanumPoint } from "@/components/Explorer";
-import { FORESTS, summarize } from "@/lib/journey";
+import Explorer from "@/components/Explorer";
+import { FORESTS, SOURCES, summarize } from "@/lib/journey";
+import type { NanumPoint, ToiletPoint } from "@/lib/types";
 
 export default function Home() {
   const forests = FORESTS.map(summarize);
-  const nanum = (raw as unknown as { nanumAll: NanumPoint[] }).nanumAll;
-  return <Explorer forests={forests} nanum={nanum} />;
+  const data = raw as unknown as { nanumAll: NanumPoint[]; toiletLayer: ToiletPoint[] };
+  const total = Object.keys(SOURCES).length;
+  const forestData = Object.values(SOURCES).filter((s) => s.kind.startsWith("산림")).length;
+  return (
+    <Explorer
+      forests={forests}
+      nanum={data.nanumAll}
+      toilets={data.toiletLayer}
+      datasetCount={total}
+      forestDatasetCount={forestData}
+    />
+  );
 }

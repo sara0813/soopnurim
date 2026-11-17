@@ -1,6 +1,6 @@
 // 숲누림 서비스 워커: 페이지는 네트워크 우선(오프라인 시 캐시), 정적 파일은 캐시 우선
-const CACHE = "soopnurim-v1";
-const PRECACHE = ["/", "/gaps", "/about", "/icon.svg"];
+const CACHE = "soopnurim-v2";
+const PRECACHE = ["/", "/gaps", "/data", "/about", "/icon.svg"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));

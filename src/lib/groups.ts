@@ -1,9 +1,9 @@
 import type { Group } from "./types";
 
-export const GROUPS: { id: Group; label: string; emoji: string; desc: string; bit: number }[] = [
-  { id: "wheelchair", label: "휠체어 이용자", emoji: "🦽", desc: "단차·경사·장애인 객실과 화장실", bit: 1 },
-  { id: "elder", label: "고령자", emoji: "👵", desc: "계단·손잡이·침대방·이동 거리", bit: 2 },
-  { id: "child", label: "유아 동반", emoji: "👶", desc: "유모차 통행·기저귀 교환대·짧은 코스", bit: 4 },
+export const GROUPS: { id: Group; label: string; desc: string; bit: number }[] = [
+  { id: "wheelchair", label: "휠체어 이용자", desc: "단차·경사, 장애인 객실과 화장실", bit: 1 },
+  { id: "elder", label: "고령자", desc: "계단·손잡이, 침대방, 이동 거리", bit: 2 },
+  { id: "child", label: "유아 동반", desc: "유모차 통행, 기저귀 교환대, 짧은 코스", bit: 4 },
 ];
 
 export const groupBit = (g: Group) => GROUPS.find((x) => x.id === g)!.bit;
