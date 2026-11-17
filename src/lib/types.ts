@@ -241,6 +241,11 @@ export interface JourneyItem {
   label: string;
   groups: Group[];
   status: Status;
+  /**
+   * 상태 배지 문구를 바꿀 때. 예: 대중교통은 '확인됨'이 '이용 가능'으로 읽히지 않도록
+   * '위치만 확인'으로 표시한다(위치 정보가 있다는 뜻이지 버스 운행·보행 가능 여부가 아님)
+   */
+  statusText?: string;
   source?: SourceKind;
   /** 확인된 내용(있을 때) 또는 빈칸에 대한 참고 설명 */
   value?: string;

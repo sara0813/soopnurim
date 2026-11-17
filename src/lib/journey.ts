@@ -210,6 +210,8 @@ export function buildJourney(f: Forest, lang: Lang = "ko"): JourneyItem[] {
     ...(b0
       ? {
           status: b0.distKm <= 1 ? "ok" : "warn",
+          statusText:
+            b0.distKm <= 1 ? t("위치만 확인", "Location only") : t("위치만 확인 · 1km 넘음", "Location only · over 1 km"),
           value:
             t(
               `가장 가까운 정류장 '${b0.name}' 직선 ${km(b0.distKm)}`,
@@ -219,7 +221,10 @@ export function buildJourney(f: Forest, lang: Lang = "ko"): JourneyItem[] {
             (b0.distKm > 1
               ? t(". 걷기에 멀 수 있어 택시가 필요할 수 있어요", ". It may be too far to walk; you may need a taxi")
               : "") +
-            t(". 노선·배차는 데이터에 없음", ". Routes and timetables are not in the data"),
+            t(
+              ". 정류장 위치만 확인한 것이고, 버스가 다니는지와 걸어갈 수 있는 길인지는 데이터에 없음",
+              ". Only the stop location is confirmed; whether buses run and whether the walk is possible are not in the data",
+            ),
           ...pub("busstop"),
         }
       : {
@@ -244,9 +249,10 @@ export function buildJourney(f: Forest, lang: Lang = "ko"): JourneyItem[] {
     ...(rs
       ? {
           status: "ok" as const,
+          statusText: t("위치만 확인", "Location only"),
           value: t(
-            `한국철도공사 '${rs.name}역' 직선 ${km(rs.distKm)}. 이 역에 서는 열차·횟수는 데이터에 없음`,
-            `KORAIL '${rs.name}' station (${romanize(rs.name)}), ${km(rs.distKm)} in a straight line. Which trains stop there is not in the data`,
+            `한국철도공사 '${rs.name}역' 직선 ${km(rs.distKm)}. 역 위치만 확인한 것이고, 이 역에 서는 열차와 역에서 휴양림까지 가는 방법은 데이터에 없음`,
+            `KORAIL '${rs.name}' station (${romanize(rs.name)}), ${km(rs.distKm)} in a straight line. Only the station location is confirmed; which trains stop there and how to get from the station to the forest are not in the data`,
           ),
           ...pub("rail"),
         }
@@ -774,6 +780,7 @@ export function buildJourney(f: Forest, lang: Lang = "ko"): JourneyItem[] {
       const o = op.items[it.key];
       if (o) {
         it.status = o.status;
+        it.statusText = undefined;
         it.value = en ? (o.value_en ?? `${o.value} (Korean original)`) : o.value;
         it.source = "operator";
         it.sourceLabel = t("숲누림 운영자 전화 확인", "Checked by phone (Soopnurim)");

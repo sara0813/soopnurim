@@ -207,7 +207,7 @@ function ItemRow({
         <strong className="font-semibold">{it.label}</strong>
         <span className={`st st-${it.status}`}>
           <st.icon aria-hidden="true" className="size-4" strokeWidth={2.25} />
-          {lang === "en" ? st.en : st.label}
+          {it.statusText ?? (lang === "en" ? st.en : st.label)}
         </span>
       </div>
       {it.value && <p className="mt-1 text-[0.95rem]">{it.value}</p>}
@@ -290,6 +290,8 @@ function ItemRow({
 function ReportSummary({ reports, forestId, onDone }: { reports: Report[]; forestId: string; onDone: () => void }) {
   const { lang, t } = useLang();
   const [flagged, setFlagged] = useState<string[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [flagErr, setFlagErr] = useState<{ id: string; msg: string } | null>(null);
   useEffect(() => {
     try {
       setFlagged(JSON.parse(localStorage.getItem(FLAG_KEY) || "[]"));
@@ -310,7 +312,9 @@ function ReportSummary({ reports, forestId, onDone }: { reports: Report[]; fores
   const count = (a: Report["answer"]) => reports.filter((r) => r.answer === a).length;
   const label = (a: Report["answer"]) => (lang === "en" ? ANSWER_LABEL_EN[a] : ANSWER_LABEL[a]);
   const flag = async (id: string) => {
+    // 실패 뒤 '다시 신고'는 이미 확인을 받았으므로 다시 묻지 않는다
     if (
+      flagErr?.id !== id &&
       !confirm(
         t(
           "이 제보를 부적절한 내용으로 신고할까요? 신고가 3번 쌓이면 자동으로 숨겨집니다.",
@@ -319,16 +323,30 @@ function ReportSummary({ reports, forestId, onDone }: { reports: Report[]; fores
       )
     )
       return;
+    setBusy(id);
+    setFlagErr(null);
     try {
-      await fetch("/api/reports/flag", {
+      const res = await fetch("/api/reports/flag", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ forestId, id }),
       });
+      if (!res.ok) {
+        const msg =
+          res.status === 429
+            ? t("신고가 너무 잦아요. 잠시 뒤 다시 시도해 주세요.", "Too many flags. Please try again later.")
+            : res.status === 404
+              ? t("이미 지워진 제보예요.", "This report no longer exists.")
+              : t("신고를 저장하지 못했어요. 다시 시도해 주세요.", "The flag was not saved. Please try again.");
+        setFlagErr({ id, msg });
+        return;
+      }
       remember(id);
       onDone();
     } catch {
-      /* 무시 */
+      setFlagErr({ id, msg: t("연결이 끊겨 신고를 보내지 못했어요. 다시 시도해 주세요.", "Could not send the flag. Please try again.") });
+    } finally {
+      setBusy(null);
     }
   };
   return (
@@ -341,7 +359,7 @@ function ReportSummary({ reports, forestId, onDone }: { reports: Report[]; fores
       </p>
       <ul className="mt-1 divide-y divide-line">
         {reports.slice(0, 5).map((r) => (
-          <li key={r.id} className="flex items-start gap-2 py-1.5 text-sm">
+          <li key={r.id} className="flex flex-wrap items-start gap-x-2 py-1.5 text-sm">
             <span className="min-w-0 flex-1">
               <span className="font-semibold">{label(r.answer)}</span>
               {r.memo && <> – {r.memo}</>}
@@ -354,13 +372,24 @@ function ReportSummary({ reports, forestId, onDone }: { reports: Report[]; fores
             <button
               type="button"
               onClick={() => flag(r.id)}
-              disabled={flagged.includes(r.id)}
+              disabled={flagged.includes(r.id) || busy === r.id}
               className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded px-1 text-xs text-muted hover:text-fg disabled:opacity-50"
               aria-label={t("이 제보 신고", "Flag this report")}
             >
               <Flag aria-hidden="true" className="size-3.5" />
-              {flagged.includes(r.id) ? t("신고됨", "Flagged") : t("신고", "Flag")}
+              {flagged.includes(r.id)
+                ? t("신고됨", "Flagged")
+                : busy === r.id
+                  ? t("보내는 중", "Sending")
+                  : flagErr?.id === r.id
+                    ? t("다시 신고", "Retry")
+                    : t("신고", "Flag")}
             </button>
+            {flagErr?.id === r.id && (
+              <p role="alert" className="basis-full text-xs text-[var(--warn)]">
+                {flagErr.msg}
+              </p>
+            )}
           </li>
         ))}
       </ul>

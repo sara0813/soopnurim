@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { FOREST_ID } from "@/lib/reportKeys";
-import { getReport, putReport } from "@/lib/reportStore";
+import { setHidden } from "@/lib/reportStore";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +14,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "권한 없음" }, { status: 401 });
   const { forestId = "", id = "", hidden = true } = await req.json().catch(() => ({}));
   if (!FOREST_ID.test(forestId)) return NextResponse.json({ error: "잘못된 요청" }, { status: 400 });
-  const r = await getReport(forestId, String(id));
-  if (!r) return NextResponse.json({ error: "없는 제보" }, { status: 404 });
-  r.hidden = Boolean(hidden);
-  await putReport(r);
-  return NextResponse.json({ ok: true, hidden: r.hidden });
+  if (!(await setHidden(forestId, String(id), Boolean(hidden)))) return NextResponse.json({ error: "없는 제보" }, { status: 404 });
+  return NextResponse.json({ ok: true, hidden: Boolean(hidden) });
 }
