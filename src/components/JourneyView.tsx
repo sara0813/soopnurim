@@ -88,7 +88,7 @@ export default function JourneyView({
     <div className="space-y-4">
       <div className="card space-y-4 p-4 sm:p-5">
         <GroupPicker compact />
-        {!groups.length && <p className="text-sm text-muted">유형을 고르면 그 유형에 필요한 항목만 보여드립니다.</p>}
+        {!groups.length && <p className="text-sm text-muted">고르면 필요한 항목만 보여 드려요.</p>}
         <CoverageBar known={known} total={rel.length} size="lg" />
         <Legend />
       </div>

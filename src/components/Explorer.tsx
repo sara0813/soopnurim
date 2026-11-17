@@ -9,11 +9,14 @@ import {
   BedDouble,
   CalendarCheck,
   ChevronDown,
+  FileCheck2,
   List,
   LocateFixed,
   Map as MapIcon,
+  MessageSquareText,
   Percent,
   Phone,
+  PhoneCall,
   Route,
   Search,
   SlidersHorizontal,
@@ -78,13 +81,11 @@ export default function Explorer({
   nanum,
   toilets,
   datasetCount,
-  forestDatasetCount,
 }: {
   forests: ForestSummary[];
   nanum: NanumPoint[];
   toilets: ToiletPoint[];
   datasetCount: number;
-  forestDatasetCount: number;
 }) {
   const { groups } = useGroups();
   const mask = groupsMask(groups);
@@ -200,51 +201,42 @@ export default function Explorer({
     <div className="space-y-5">
       <section aria-labelledby="intro" className="space-y-3 pt-1">
         <p className="eyebrow">
-          산림공공데이터 {forestDatasetCount}종 포함 공공데이터 {datasetCount}종 · 휴양림 {forests.length}곳
+          공공데이터 {datasetCount}종 · 휴양림 {forests.length}곳
         </p>
         <h1 id="intro" className="text-[1.6rem] font-bold leading-snug sm:text-[2rem]">
           휴양림 예약 전에,
           <br /> 우리 가족이 이용할 수 있을지 확인하세요
         </h1>
-        <p className="max-w-2xl text-muted">
-          공공데이터로 확인되는 것은 출처와 함께 보여 드리고, 공공데이터에 없는 것은 운영기관에 그대로 물어볼 질문으로 바꿔
-          드립니다. 휠체어 이용자·고령자·유아 동반 가족이 휴양림을 고르기 전에 쓰는 서비스입니다.
-        </p>
-        <ul className="grid gap-2 pt-1 text-sm sm:grid-cols-3">
+        <p className="text-muted">휠체어·고령자·유아 동반 가족을 위한 휴양림 정보</p>
+        {example && (
+          <Link href={`/forest/${example.id}`} className="btn btn-primary">
+            예시 보기: {example.name}
+            <ArrowRight aria-hidden="true" className="size-4" />
+          </Link>
+        )}
+        <ul className="card grid divide-y divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           {[
-            [
-              "'무장애 시설 있음'만으로는 객실 문턱이나 화장실까지 알 수 없어요",
-              `도착부터 숲길까지 ${itemCount}개 항목을 여행 순서대로, 출처·기준일과 함께 보여 드려요`,
-            ],
-            ["정보가 없으면 무엇을 물어봐야 할지 막막해요", "빈칸은 운영기관에 그대로 물어볼 전화 질문 목록이 돼요"],
-            ["공식 정보만으로는 실제 상태를 알기 어려워요", "다녀온 분의 제보를 방문 시기와 함께 따로 보여 드려요"],
-          ].map(([problem, result], i) => (
-            <li
-              key={problem}
-              className={`rounded-xl px-4 py-3.5 ${["bg-tint-lavender", "bg-tint-peach", "bg-tint-mint"][i]}`}
-            >
-              <p className="text-muted">{problem}</p>
-              <p className="mt-1.5 flex gap-1.5 font-semibold">
-                <ArrowRight aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                <span>{result}</span>
-              </p>
+            { icon: FileCheck2, title: "있는 정보는 출처와 함께", text: `주차부터 숲길까지 ${itemCount}개 항목` },
+            { icon: PhoneCall, title: "없는 정보는 질문으로", text: "운영기관에 물어볼 말을 정리해 드려요" },
+            { icon: MessageSquareText, title: "다녀온 사람의 제보", text: "실제 상태를 방문 시기와 함께" },
+          ].map(({ icon: Icon, title, text }) => (
+            <li key={title} className="flex items-center gap-3 px-4 py-3.5">
+              <span
+                aria-hidden="true"
+                className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-fg"
+              >
+                <Icon className="size-[18px]" strokeWidth={2} />
+              </span>
+              <span className="min-w-0">
+                <span className="block font-semibold">{title}</span>
+                <span className="block text-sm text-muted">{text}</span>
+              </span>
             </li>
           ))}
         </ul>
-        {example && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Link href={`/forest/${example.id}`} className="btn btn-primary">
-              예시로 둘러보기: {example.name}
-              <ArrowRight aria-hidden="true" className="size-4" />
-            </Link>
-            <a href="#find" className="btn btn-outline">
-              휴양림 찾기
-            </a>
-          </div>
-        )}
       </section>
 
-      <div id="find" className="card scroll-mt-4 p-4">
+      <div className="card p-4">
         <GroupPicker compact />
       </div>
 
@@ -409,9 +401,7 @@ export default function Explorer({
               </div>
             )}
           </div>
-          <p className="p-3 text-sm text-muted">
-            초록 원을 누르면 요약 카드가 열립니다. 숫자 원은 가까운 휴양림 묶음이며, 누르면 확대됩니다.
-          </p>
+          <p className="p-3 text-sm text-muted">휴양림 표시를 누르면 요약이 열려요. 숫자 원은 누르면 확대돼요.</p>
         </div>
       ) : (
         <>
@@ -512,7 +502,7 @@ function ForestCard({
       <div className="mt-auto space-y-1 border-t border-line pt-3">
         <CoverageBar known={cov.known} total={cov.total} />
         <p className="text-xs text-muted">
-          공공데이터 {f.sourceCount}종 연결 · 기본정보 기준일 {f.refDate || "–"}
+          데이터 {f.sourceCount}종 · 기준일 {f.refDate || "–"}
         </p>
       </div>
       <div className="flex gap-2">

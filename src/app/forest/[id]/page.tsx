@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarCheck, ChevronLeft, ExternalLink, Globe, MapPinned, Phone } from "lucide-react";
+import { CalendarCheck, ChevronLeft, ExternalLink, Globe, Phone } from "lucide-react";
 import { bookingLink } from "@/lib/booking";
 import JourneyView from "@/components/JourneyView";
+import MapAppMenu from "@/components/MapAppMenu";
 import RoomList from "@/components/RoomList";
 import { Note, Section, Src, Sub } from "@/components/Section";
 import { CORE_KEYS, FORESTS, SOURCES, buildJourney, getForest, km, lotteryOf } from "@/lib/journey";
@@ -77,16 +78,7 @@ export default async function ForestPage({ params }: { params: Promise<{ id: str
               <span className="sr-only">(새 창)</span>
             </a>
           )}
-          {f.lat && f.lng && (
-            <a
-              href={`https://map.kakao.com/link/map/${encodeURIComponent(f.name)},${f.lat},${f.lng}`}
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-outline"
-            >
-              <MapPinned aria-hidden="true" className="size-4" /> 지도 앱
-            </a>
-          )}
+          {f.lat && f.lng && <MapAppMenu name={f.name} lat={f.lat} lng={f.lng} />}
         </div>
       </header>
 
@@ -106,8 +98,8 @@ export default async function ForestPage({ params }: { params: Promise<{ id: str
       </nav>
 
       {f.notInStd && (
-        <p className="rounded-xl border border-[var(--warn)]/30 bg-[var(--warn-bg)] p-3 text-sm text-[var(--warn)]">
-          이 국립자연휴양림은 전국휴양림표준데이터에 없어, 국립자연휴양림관리소의 시설정보·예약정책 데이터로 보완해 표시합니다.
+        <p className="rounded-xl bg-surface-2 px-4 py-3 text-sm text-muted">
+          표준데이터에 없는 국립자연휴양림이라 국립자연휴양림관리소 데이터로 보여 드려요.
         </p>
       )}
 
@@ -178,7 +170,7 @@ export default async function ForestPage({ params }: { params: Promise<{ id: str
         {f.sources.includes("std") ? <Src k="std" date={f.refDate} /> : <Src k="natfac" />}
         {f.intro && <Src k="natintro" note="소개·운영시간·조성연도" />}
         {f.layoutMap && <Src k="natlayout" note="배치도 이미지는 숲나들e 서버에 있습니다" />}
-        {f.telSource === "natpolicy" && <Note>연락처는 국립자연휴양림 우선예약·추첨예약 정책 데이터에서 보완했습니다.</Note>}
+        {f.telSource === "natpolicy" && <Note>연락처는 국립자연휴양림 예약정책 데이터에서 가져왔어요.</Note>}
       </Section>
 
       {/* 여정 체크 + 질문 + 제보 */}
@@ -293,7 +285,7 @@ export default async function ForestPage({ params }: { params: Promise<{ id: str
                 </table>
               </div>
               <Src k="natdiscount" />
-              <Note>할인 자격·증빙 서류는 숲나들e에서 확인하세요. 중증·경증은 데이터의 등급 별칭 그대로 표기했습니다.</Note>
+              <Note>할인 자격·증빙 서류는 숲나들e에서 확인하세요.</Note>
             </Sub>
           ) : null}
 
@@ -329,7 +321,7 @@ export default async function ForestPage({ params }: { params: Promise<{ id: str
                 ))}
               </ul>
               <Src k="natclosure" note={`전체 ${f.closures.count}건 중 최근 ${f.closures.items.length}건`} />
-              <Note>기상특보 등으로 이용이 막혔던 기록입니다. 방문 날짜의 기상특보를 함께 확인하세요.</Note>
+              <Note>기상특보 등으로 이용이 막혔던 기록이에요.</Note>
             </Sub>
           ) : null}
 
@@ -492,7 +484,7 @@ export default async function ForestPage({ params }: { params: Promise<{ id: str
           ))}
         </ul>
         {f.duplicates && (
-          <Note>표준데이터에 같은 휴양림이 {f.duplicates.length + 1}건 등록되어 있어 기준일이 가장 최신인 레코드를 사용했습니다.</Note>
+          <Note>표준데이터에 같은 곳이 {f.duplicates.length + 1}건 있어 가장 최신 기록을 썼어요.</Note>
         )}
         <p className="mt-3 text-sm">
           <Link href="/data" className="font-medium text-brand-strong underline underline-offset-2">

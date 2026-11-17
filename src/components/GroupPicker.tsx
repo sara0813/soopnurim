@@ -9,7 +9,7 @@ export default function GroupPicker({ compact = false }: { compact?: boolean }) 
   return (
     <fieldset>
       <legend className={compact ? "mb-2 text-sm font-semibold text-muted" : "mb-3 text-lg font-bold"}>
-        누구와 함께 가나요? <span className="font-normal text-muted">(여러 개 선택 가능)</span>
+        누구와 함께 가나요? <span className="font-normal text-muted">(중복 선택 가능)</span>
       </legend>
       <div className="grid grid-cols-3 gap-2">
         {GROUPS.map((g) => {

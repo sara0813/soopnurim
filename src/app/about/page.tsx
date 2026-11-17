@@ -3,60 +3,28 @@ import Link from "next/link";
 
 export const metadata: Metadata = { title: "소개" };
 
+const DIFF = [
+  ["여정 전체를 한 화면에", "주차 → 진입로 → 객실 → 화장실 → 숲길 → 안전"],
+  ["근거를 섞지 않고 표시", "공공데이터·운영자 확인·이용자 제보를 출처와 날짜로 구분"],
+  ["빈칸은 질문과 제보로", "모르는 항목은 전화 질문이 되고, 다녀온 분의 제보로 채워져요"],
+];
+
 export default function About() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
         <p className="eyebrow">소개</p>
-        <h1 className="text-[1.7rem] font-bold sm:text-3xl">산림여행 한 번을, 확인할 근거로 잇습니다</h1>
-        <p className="max-w-2xl text-muted">
-          숲누림은 산림공공데이터와 현장 확인 정보를 연결해, 휴양림 도착부터 숙박·화장실·숲길까지 이용자가 직접 판단할 근거를
-          제공하는 서비스입니다.
+        <h1 className="text-[1.7rem] font-bold sm:text-3xl">휴양림 여행 전에, 확인할 근거를 한곳에</h1>
+        <p className="text-muted">
+          &lsquo;무장애 시설 있음&rsquo;만으로는 문턱·경사·화장실까지 알 수 없어요. 숲누림은 휴양림을{" "}
+          <strong className="text-fg">평가하거나 판정하지 않고</strong>, 있는 정보와 빈칸을 그대로 보여 드려요.
         </p>
       </header>
 
       <section className="card space-y-3 p-4 sm:p-5">
-        <h2 className="text-xl font-bold">왜 만들었나요?</h2>
-        <p>
-          휴양림에 무장애 시설이 &lsquo;있다&rsquo;고 표시돼도, 휠체어 이용자·고령자·유아 동반 가족이 도착부터 숲길까지 여정 전체를
-          해낼 수 있는지는 알기 어렵습니다. 공공데이터에는 시설이 있는지 정도만 나오고 문턱·경사·화장실 규격 같은 정보는 비어
-          있어, 결국 전화로 일일이 묻거나 현장에서 곤란을 겪게 됩니다.
-        </p>
-        <p>
-          숲누림은 휴양림을 <strong>평가하거나 판정하지 않습니다.</strong> 확인된 정보와 빈칸을 출처와 함께 보여드리고, 빈칸은
-          물어볼 질문과 다녀온 분의 제보로 채워 갑니다.
-        </p>
-      </section>
-
-      <section className="card space-y-3 p-4 sm:p-5">
-        <h2 className="text-xl font-bold">기존 서비스와 무엇이 다른가요?</h2>
-        <p>
-          숲누림의 핵심은 정보를 보여 주는 데서 끝나지 않고, <strong>공공데이터가 답하지 못하는 빈칸을 이용자가 실제로 물어볼
-          질문으로 바꾸는 것</strong>입니다. 그 질문의 답은 다녀온 분의 제보로 모이고, 전국에서 반복되는 빈칸은{" "}
-          <Link href="/gaps" className="underline underline-offset-2">
-            데이터 개선 제안
-          </Link>
-          으로 정리해 공공데이터를 고칠 근거로 돌려줍니다.
-        </p>
-        <p className="text-muted">
-          무장애 관광정보, 무장애나눔길 지도, 휴양림 예약, 사진 기반 접근성 제보는 이미 좋은 서비스가 있습니다. 숲누림은 이들을
-          대신하지 않고, 흩어진 정보를 산림여행 한 건의 여정으로 잇는 데 집중합니다.
-        </p>
+        <h2 className="text-xl font-bold">무엇이 다른가요?</h2>
         <ol className="space-y-3">
-          {[
-            [
-              "산림여행 전 과정을 연결",
-              "관광지 목록이나 숲길 지도에서 끝나지 않고, 주차 → 진입로 → 객실 → 화장실 → 숲길 → 안전을 한 화면에서 이어 봅니다.",
-            ],
-            [
-              "정보의 근거를 구분해 표시",
-              "공공데이터, 운영자 확인, 이용자 제보, 온라인 자료 참고를 서로 섞지 않고, 출처와 확인 시점을 항목마다 붙입니다.",
-            ],
-            [
-              "빈칸을 질문과 제보로 채우기",
-              "데이터에 없는 항목은 전화 질문 목록으로 바꾸고, 다녀온 분이 있었어요·없었어요와 방문 시기를 남길 수 있습니다.",
-            ],
-          ].map(([t, d], i) => (
+          {DIFF.map(([t, d], i) => (
             <li key={t} className="flex gap-3">
               <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-fill text-sm font-bold text-white">
                 {i + 1}
@@ -69,77 +37,63 @@ export default function About() {
           ))}
         </ol>
         <p className="text-sm text-muted">
-          예약은{" "}
+          전국에서 반복되는 빈칸은{" "}
+          <Link href="/gaps" className="underline underline-offset-2">
+            데이터 개선 제안
+          </Link>
+          으로 정리했어요. 예약은{" "}
           <a href="https://www.foresttrip.go.kr" target="_blank" rel="noreferrer" className="underline underline-offset-2">
             숲나들e
           </a>
-          , 휴양림 밖 관광지의 무장애 정보는{" "}
+          , 휴양림 밖 무장애 관광은{" "}
           <a href="https://access.visitkorea.or.kr" target="_blank" rel="noreferrer" className="underline underline-offset-2">
             열린관광 모두의 여행
           </a>
-          에서 함께 확인하세요.
+          에서 확인하세요.
         </p>
       </section>
 
       <section className="card space-y-3 p-4 sm:p-5">
-        <h2 className="text-xl font-bold">정보 표시 방법</h2>
+        <h2 className="text-xl font-bold">정보 표시</h2>
         <ul className="space-y-2.5">
-          <li className="flex flex-wrap items-baseline gap-x-2">
-            <span className="src src-public">공공데이터</span>
-            <span>산림청 및 관계기관 공공데이터. 데이터셋 이름과 기준일을 함께 적습니다.</span>
-          </li>
-          <li className="flex flex-wrap items-baseline gap-x-2">
-            <span className="src src-operator">운영자 확인</span>
-            <span>숲누림이 운영기관에 직접 전화로 확인한 내용. 확인 날짜를 적습니다.</span>
-          </li>
-          <li className="flex flex-wrap items-baseline gap-x-2">
-            <span className="src src-user">이용자 제보</span>
-            <span>다녀온 분의 익명 제보. 방문 시기를 적고, 신고가 쌓이면 숨겨집니다.</span>
-          </li>
-          <li className="flex flex-wrap items-baseline gap-x-2">
-            <span className="src src-web">온라인 자료 참고</span>
-            <span>운영기관 공지나 방문 후기를 요약한 참고 정보. &lsquo;미확인&rsquo;으로 표시하며 항목 상태를 바꾸지 않습니다.</span>
-          </li>
-          <li className="flex flex-wrap items-baseline gap-x-2">
-            <span className="src src-blank">빈칸</span>
-            <span>어느 출처에도 정보가 없는 항목. 전화 질문 목록으로 연결합니다.</span>
-          </li>
+          {[
+            ["src-public", "공공데이터", "데이터셋 이름과 기준일을 함께 표시"],
+            ["src-operator", "운영자 확인", "운영기관에 전화로 확인한 내용과 날짜"],
+            ["src-user", "이용자 제보", "익명 제보와 방문 시기. 신고가 쌓이면 숨김"],
+            ["src-web", "온라인 자료 참고", "공지·후기 요약. 항목 상태는 바꾸지 않음"],
+            ["src-blank", "빈칸", "어디에도 정보가 없는 항목. 전화 질문으로 연결"],
+          ].map(([cls, label, d]) => (
+            <li key={label} className="flex flex-wrap items-baseline gap-x-2">
+              <span className={`src ${cls}`}>{label}</span>
+              <span>{d}</span>
+            </li>
+          ))}
         </ul>
-      </section>
-
-      <section className="card space-y-2 p-4 sm:p-5">
-        <h2 className="text-xl font-bold">정보 확인도란?</h2>
-        <p>
-          선택한 이용자 유형에 필요한 확인 항목 중, 출처가 있는 정보로 채워진 항목의 비율입니다.{" "}
-          <strong>접근성 점수가 아닙니다.</strong> 확인도가 높아도 &lsquo;추가 확인 필요&rsquo;나 &lsquo;없음&rsquo; 항목이 있을 수
-          있고, 낮다고 이용이 어렵다는 뜻도 아닙니다. 이용자 제보는 확인도에 넣지 않고 따로 보여드립니다.
+        <p className="text-sm text-muted">
+          <strong className="text-fg">정보 확인도</strong>는 접근성 점수가 아니라, 필요한 항목 중 출처가 있는 정보의
+          비율이에요. 이용자 제보는 넣지 않아요.
         </p>
       </section>
 
       <section className="card space-y-2 p-4 sm:p-5">
-        <h2 className="text-xl font-bold">준비 중: 숲누림 렌즈 (AI 보조 제보)</h2>
+        <h2 className="flex flex-wrap items-center gap-2 text-xl font-bold">
+          사진으로 빈칸 채우기 <span className="tag">준비 중</span>
+        </h2>
         <p>
-          다녀온 곳 사진을 올리면 AI가 사진 속 단서(문턱, 경사로, 손잡이 등)를 찾아 어떤 항목에 제보할지 <strong>제안만</strong>
-          하는 기능입니다. 기능은 만들어 두었고, 운영 비용 문제로 아직 켜지 않았습니다. 지금은 항목마다 있는 제보 버튼으로 직접
-          남길 수 있습니다.
+          사진을 올리면 AI가 문턱·경사로·손잡이 같은 단서를 찾아 제보할 항목을 <strong>제안만</strong> 하는 기능이에요.
+          만들어 두었지만 운영 비용 문제로 아직 쓸 수 없어요. 휴양림 화면에서 예시를 볼 수 있어요.
         </p>
-        <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
-          <li>켜게 되면 사진은 올리기 전에 브라우저에서 크기를 줄이고 위치정보(EXIF)를 지웁니다.</li>
-          <li>사진은 분석에만 쓰고 저장하지 않으며, 제보로 남는 것은 이용자가 직접 고르고 확인한 항목뿐입니다.</li>
-          <li>AI는 판정을 하지 않고 사진에 보이는 사실만 제안하며, 얼굴·차량번호 같은 개인정보는 적지 않도록 했습니다.</li>
-        </ul>
+        <p className="text-sm text-muted">사진은 위치정보를 지우고 분석에만 쓰며 저장하지 않아요.</p>
       </section>
 
       <p className="text-sm text-muted">
-        사용한 데이터셋과 가공 방법은{" "}
         <Link href="/data" className="underline underline-offset-2">
           데이터 출처
         </Link>
-        에, 데이터에서 발견한 빈칸과 개선 제안은{" "}
+        {" · "}
         <Link href="/gaps" className="underline underline-offset-2">
           전국 빈칸
         </Link>
-        에 정리했습니다.
       </p>
     </div>
   );

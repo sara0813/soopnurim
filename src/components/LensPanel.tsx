@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Camera, ImagePlus, Loader2, ScanSearch, Send, X } from "lucide-react";
+import { Camera, ImageIcon, ImagePlus, Loader2, ScanSearch, Send, X } from "lucide-react";
 import { LENS_ITEMS } from "@/lib/reportKeys";
 import { ANSWER_LABEL, type Answer } from "./ReportForm";
 
@@ -115,8 +115,9 @@ export default function LensPanel({ forestId, onDone }: { forestId: string; onDo
     }
   };
 
-  // 분석 기능이 꺼져 있으면(API 키 없음) 패널 자체를 보이지 않는다
-  if (!enabled) return null;
+  if (enabled === null) return null;
+  // 분석 기능이 꺼져 있으면(API 키 없음) 준비 중 안내와 예시 화면만 보여 준다
+  if (!enabled) return <LensPreview />;
 
   return (
     <div className="card p-4 sm:p-5">
@@ -234,6 +235,55 @@ export default function LensPanel({ forestId, onDone }: { forestId: string; onDo
               {sent}건을 제보했습니다. 아래 여정 항목에서 볼 수 있습니다.
             </p>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** 예시 결과: 실제 분석이 아니라 동작 방식을 보여 주는 고정 화면 */
+const SAMPLE: Suggestion[] = [
+  { itemKey: "roomEntrance", answer: "no", clue: "출입문 앞에 계단 두 칸이 보여요" },
+  { itemKey: "stairsHandrail", answer: "yes", clue: "계단 오른쪽에 손잡이가 있어요" },
+  { itemKey: "pathStepSlope", answer: "unsure", clue: "노면은 데크로 보이지만 경사는 사진으로 알기 어려워요" },
+];
+
+function LensPreview() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="card p-4 sm:p-5">
+      <div className="flex items-start gap-3">
+        <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-muted">
+          <ScanSearch className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="flex flex-wrap items-center gap-2 text-lg font-bold">
+            사진으로 빈칸 채우기 <span className="tag">준비 중</span>
+          </h3>
+          <p className="text-sm text-muted">AI가 사진에서 문턱·손잡이 같은 단서를 찾아 제보를 도와요. 운영 비용 문제로 아직 쓸 수 없어요.</p>
+        </div>
+      </div>
+      <button type="button" className="btn btn-outline mt-3 w-full sm:w-auto" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        {open ? "예시 닫기" : "예시 화면 보기"}
+      </button>
+      {open && (
+        <div className="mt-3 space-y-2" aria-label="예시 화면">
+          <div className="flex items-center gap-3">
+            <span aria-hidden="true" className="flex size-20 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 text-muted">
+              <ImageIcon className="size-7" />
+            </span>
+            <p className="text-sm text-muted">예시 사진: 숲속의집 출입구</p>
+          </div>
+          <ul className="space-y-2">
+            {SAMPLE.map((s) => (
+              <li key={s.itemKey} className="rounded-xl border border-line bg-surface-2 p-3">
+                <span className="font-semibold">{LABEL[s.itemKey]}</span>
+                <span className="src src-web ml-2 align-middle">AI 제안 · {AI_SAYS[s.answer]}</span>
+                <span className="mt-0.5 block text-sm text-muted">{s.clue}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted">실제로는 맞는 항목만 골라 제보하고, 사진은 저장하지 않아요.</p>
         </div>
       )}
     </div>

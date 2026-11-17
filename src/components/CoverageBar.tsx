@@ -25,7 +25,7 @@ export default function CoverageBar({ known, total, size = "md" }: { known: numb
       </div>
       {lg && (
         <p className="mt-2 text-sm text-muted">
-          접근성 점수가 아닙니다. 여행 판단에 필요한 정보 중 출처가 있는 정보가 얼마나 채워졌는지를 나타냅니다.
+          접근성 점수가 아니라, 필요한 정보 중 출처가 있는 정보의 비율이에요.
         </p>
       )}
     </div>

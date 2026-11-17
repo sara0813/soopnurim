@@ -7,14 +7,12 @@ export default function Home() {
   const forests = FORESTS.map(summarize);
   const data = raw as unknown as { nanumAll: NanumPoint[]; toiletLayer: ToiletPoint[] };
   const total = Object.keys(SOURCES).length;
-  const forestData = Object.values(SOURCES).filter((s) => s.kind.startsWith("산림")).length;
   return (
     <Explorer
       forests={forests}
       nanum={data.nanumAll}
       toilets={data.toiletLayer}
       datasetCount={total}
-      forestDatasetCount={forestData}
     />
   );
 }
