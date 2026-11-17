@@ -2,13 +2,17 @@
 import { useState } from "react";
 import { ChevronDown, ExternalLink } from "lucide-react";
 import type { Room } from "@/lib/types";
+import { useLang } from "@/lib/useLang";
 
-const won = (n: number | null) => (n ? `${n.toLocaleString()}원` : "–");
 const LOT: Record<string, string> = { disabled: "장애인 추첨", multiChild: "다자녀 추첨", voucher: "바우처 우선" };
+const LOT_EN: Record<string, string> = { disabled: "Disabled lottery", multiChild: "Large-family lottery", voucher: "Voucher priority" };
 
 type Filter = "all" | "disabled" | "multiChild" | "noLoft";
 
 export default function RoomList({ rooms }: { rooms: Room[] }) {
+  const { lang, t } = useLang();
+  const en = lang === "en";
+  const won = (n: number | null) => (n ? (en ? `KRW ${n.toLocaleString()}` : `${n.toLocaleString()}원`) : "–");
   const [filter, setFilter] = useState<Filter>("all");
   const [limit, setLimit] = useState(8);
   const isDisabled = (r: Room) => r.lottery.includes("disabled") || r.disabledPriority;
@@ -16,14 +20,14 @@ export default function RoomList({ rooms }: { rooms: Room[] }) {
     filter === "all" ? true : filter === "noLoft" ? !r.loft : filter === "disabled" ? isDisabled(r) : r.lottery.includes(filter),
   );
   const opts: [Filter, string][] = [
-    ["all", `전체 ${rooms.length}`],
-    ["disabled", `장애인 추첨·우선 ${rooms.filter(isDisabled).length}`],
-    ["multiChild", `다자녀 추첨 ${rooms.filter((r) => r.lottery.includes("multiChild")).length}`],
-    ["noLoft", `다락·복층 언급 없음 ${rooms.filter((r) => !r.loft).length}`],
+    ["all", t(`전체 ${rooms.length}`, `All ${rooms.length}`)],
+    ["disabled", t(`장애인 추첨·우선 ${rooms.filter(isDisabled).length}`, `Disabled lottery/priority ${rooms.filter(isDisabled).length}`)],
+    ["multiChild", t(`다자녀 추첨 ${rooms.filter((r) => r.lottery.includes("multiChild")).length}`, `Large-family lottery ${rooms.filter((r) => r.lottery.includes("multiChild")).length}`)],
+    ["noLoft", t(`다락·복층 언급 없음 ${rooms.filter((r) => !r.loft).length}`, `No loft mentioned ${rooms.filter((r) => !r.loft).length}`)],
   ];
   return (
     <div className="space-y-3">
-      <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="객실 필터">
+      <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label={t("객실 필터", "Room filter")}>
         {opts.map(([v, l]) => (
           <button
             key={v}
@@ -46,37 +50,39 @@ export default function RoomList({ rooms }: { rooms: Room[] }) {
               <strong className="font-semibold">{r.name}</strong>
               <span className="text-sm text-muted">
                 {r.areaM2 ? `${r.areaM2}㎡` : ""}
-                {r.capacity ? ` · 기준 ${r.capacity}명` : ""}
+                {r.capacity ? t(` · 기준 ${r.capacity}명`, ` · ${r.capacity} guests`) : ""}
               </span>
             </div>
             <p className="mt-0.5 text-sm tabular-nums">
-              비수기 주중 {won(r.priceOffWeekday)} · 성수기 주말 {won(r.pricePeakWeekend)}
+              {t("비수기 주중", "Off-season weekday")} {won(r.priceOffWeekday)} · {t("성수기 주말", "Peak weekend")} {won(r.pricePeakWeekend)}
             </p>
             {(r.lottery.length > 0 || r.disabledPriority || r.bed || r.ondol || r.loft) && (
               <div className="mt-2 flex flex-wrap gap-1">
-                {r.lottery.map((t) => (
-                  <span key={t} className="tag tag-brand">
-                    {LOT[t] ?? t}
+                {r.lottery.map((k) => (
+                  <span key={k} className="tag tag-brand">
+                    {(en ? LOT_EN : LOT)[k] ?? k}
                   </span>
                 ))}
-                {r.disabledPriority && <span className="tag tag-brand">장애인 우선예약 표기</span>}
-                {r.bed && <span className="tag">침대 언급</span>}
-                {r.ondol && <span className="tag">온돌 언급</span>}
-                {r.loft && <span className="tag tag-warn">다락·복층·계단 언급</span>}
+                {r.disabledPriority && <span className="tag tag-brand">{t("장애인 우선예약 표기", "Marked disabled priority")}</span>}
+                {r.bed && <span className="tag">{t("침대 언급", "Bed mentioned")}</span>}
+                {r.ondol && <span className="tag">{t("온돌 언급", "Ondol (floor) mentioned")}</span>}
+                {r.loft && <span className="tag tag-warn">{t("다락·복층·계단 언급", "Loft or stairs mentioned")}</span>}
               </div>
             )}
             <div className="mt-1 flex flex-wrap items-center gap-x-3 text-sm">
               {r.layoutImg && (
                 <a href={r.layoutImg} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-1 font-medium text-brand-strong underline underline-offset-2">
-                  객실 위치도 <ExternalLink aria-hidden="true" className="size-3.5" />
+                  {t("객실 위치도", "Room location map")} <ExternalLink aria-hidden="true" className="size-3.5" />
                 </a>
               )}
               {r.desc && (
                 <details className="w-full">
                   <summary className="inline-flex min-h-9 cursor-pointer items-center gap-1 font-medium text-muted">
-                    객실 설명 원문 <ChevronDown aria-hidden="true" className="chev size-4" />
+                    {t("객실 설명 원문", "Room description (Korean original)")} <ChevronDown aria-hidden="true" className="chev size-4" />
                   </summary>
-                  <p className="text-muted">{r.desc}</p>
+                  <p lang="ko" className="text-muted">
+                    {r.desc}
+                  </p>
                 </details>
               )}
             </div>
@@ -85,10 +91,10 @@ export default function RoomList({ rooms }: { rooms: Room[] }) {
       </ul>
       {shown.length > limit && (
         <button type="button" className="btn btn-outline w-full" onClick={() => setLimit((l) => l + 16)}>
-          객실 더 보기 ({shown.length - limit}실 남음)
+          {t(`객실 더 보기 (${shown.length - limit}실 남음)`, `Show more rooms (${shown.length - limit} left)`)}
         </button>
       )}
-      {shown.length === 0 && <p className="text-muted">조건에 맞는 객실이 없습니다.</p>}
+      {shown.length === 0 && <p className="text-muted">{t("조건에 맞는 객실이 없습니다.", "No rooms match.")}</p>}
     </div>
   );
 }

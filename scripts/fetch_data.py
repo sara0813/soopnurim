@@ -39,6 +39,8 @@ DATASETS = {
     "natsafety": ("file", "15128911", "extra/15128911.csv"),
     "kidsforest": ("file", "15081674", "extra/15081674.csv"),
     "healing": ("file", "15107928", "extra/15107928.csv"),
+    # 22MB 원본은 커밋하지 않음(.gitignore). build_data.py가 휴양림 5km 이내 정류장만 busstop_near.json으로 남긴다.
+    "busstop": ("file", "15067528", "extra/15067528.csv"),
 }
 
 # 공중화장실(3만여 건)은 숲누림에 필요한 필드만 남겨 저장

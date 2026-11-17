@@ -1,4 +1,5 @@
-import { SOURCES } from "@/lib/journey";
+import { SOURCES, sourceName } from "@/lib/journey";
+import type { Lang } from "@/lib/i18n";
 
 export function Section({
   id,
@@ -36,17 +37,23 @@ export function Sub({ title, children }: { title: string; children: React.ReactN
 }
 
 /** 출처 한 줄: 데이터셋명(링크) · 기준일 */
-export function Src({ k, date, note }: { k: string; date?: string; note?: string }) {
+export function Src({ k, date, note, lang = "ko" }: { k: string; date?: string; note?: string; lang?: Lang }) {
   const s = SOURCES[k];
   if (!s) return null;
   const d = date ?? s.refDate;
   return (
     <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
-      <span className="src src-public">공공데이터</span>
+      <span className="src src-public">
+        {s.notPortal ? (lang === "en" ? "Official list" : "기관 공식 목록") : lang === "en" ? "Public data" : "공공데이터"}
+      </span>
       <a href={s.url} target="_blank" rel="noreferrer" className="underline underline-offset-2">
-        {s.name}
+        {sourceName(s, lang)}
       </a>
-      {d && <span>· 기준일 {d}</span>}
+      {d && (
+        <span>
+          · {lang === "en" ? "as of" : "기준일"} {d}
+        </span>
+      )}
       {note && <span>· {note}</span>}
     </p>
   );

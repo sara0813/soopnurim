@@ -1,4 +1,4 @@
-export type Group = "wheelchair" | "elder" | "child";
+export type Group = "wheelchair" | "elder" | "child" | "foreign";
 export type Status = "ok" | "warn" | "no" | "unknown";
 export type SourceKind = "public" | "operator" | "user";
 
@@ -12,6 +12,14 @@ export interface SourceInfo {
   fields: string;
   processing: string;
   usedIn: string;
+  name_en?: string;
+  org_en?: string;
+  kind_en?: string;
+  fields_en?: string;
+  processing_en?: string;
+  usedIn_en?: string;
+  /** 공공데이터포털 데이터셋이 아닌 기관 누리집 공식 목록 ('공공데이터 N종' 집계 제외) */
+  notPortal?: boolean;
 }
 
 export interface NanumMatch {
@@ -65,6 +73,32 @@ export interface NationalInfo {
   refDate: string;
   roomList: Room[];
   lottery: Lottery | null;
+  /** 객실 설명에서 뽑은 이용수칙 (가장 많이 쓰인 값) */
+  rules?: {
+    checkin: string | null;
+    checkinEnd: string | null;
+    checkout: string | null;
+    bbq: "fireSeason" | "yearRound" | null;
+    idCheck: boolean;
+    rooms: number;
+  };
+}
+
+export interface BusStop {
+  name: string;
+  distKm: number;
+  city: string;
+  lat: number;
+  lng: number;
+}
+
+export interface AseanPriority {
+  rooms: string[];
+  countries: { ko: string; en: string }[];
+  otherRooms: string[];
+  windows: { month: string; applyFrom: string; applyTo: string }[];
+  tel: string;
+  refDate: string;
 }
 
 export interface SurveyPoint {
@@ -114,6 +148,12 @@ export interface Forest {
   national?: NationalInfo;
   policyOnly?: Lottery | null;
   notInStd?: boolean;
+  /** 표준데이터·국립 시설정보에 없어 산림청·숲나들e 공식 목록으로 보완한 휴양림 */
+  listOnly?: boolean;
+  /** 산림청 목록에 '미운영'으로 표시된 곳 */
+  notOpen?: boolean;
+  /** 좌표 출처: foresttrip(숲나들e 찾아오시는 길 지도) / osm(OpenStreetMap 검색) */
+  geoSource?: "foresttrip" | "osm" | null;
   closed: boolean;
   survey?: {
     points: SurveyPoint[];
@@ -140,6 +180,8 @@ export interface Forest {
   safety?: { lastDate: string; items: SafetyItem[] };
   kidsPlaces?: PlaceLink;
   healingPlaces?: PlaceLink;
+  busStops?: BusStop[];
+  asean?: AseanPriority;
 }
 
 export interface Discount {
@@ -190,8 +232,10 @@ export interface JourneyItem {
   sourceLabel?: string;
   sourceDate?: string;
   sourceUrl?: string;
-  /** 빈칸일 때 운영자에게 물어볼 질문 */
+  /** 빈칸일 때 운영자에게 물어볼 질문 (화면 언어) */
   question: string;
+  /** 영어 화면에서 전화로 그대로 읽거나 보여 줄 한국어 질문 */
+  questionKo?: string;
   /** 온라인 자료 참고(미확인) – 상태를 바꾸지 않는 별도 표시 */
   web?: WebNote[];
 }
@@ -200,6 +244,7 @@ export interface WebNote {
   item: string;
   kind: "official" | "review";
   summary: string;
+  summary_en?: string;
   title: string;
   url: string;
   date: string;
@@ -207,7 +252,7 @@ export interface WebNote {
 
 /** 목록용 요약: 그룹별 확인도 계산에 필요한 최소 정보 */
 export interface ItemSummary {
-  /** 그룹 비트마스크: wheelchair=1, elder=2, child=4 */
+  /** 그룹 비트마스크: wheelchair=1, elder=2, child=4, foreign=8 */
   g: number;
   /** 확인됨(빈칸 아님) 여부 */
   k: 0 | 1;
@@ -226,6 +271,7 @@ export interface ForestSummary {
   tel: string;
   homepage: string;
   closed: boolean;
+  notOpen?: boolean;
   national: boolean;
   survey: boolean;
   roomCount: number;
@@ -238,6 +284,9 @@ export interface ForestSummary {
   lotteryRate: number | null;
   refDate: string;
   sourceCount: number;
+  /** 가장 가까운 버스정류장 직선거리(km) */
+  busNearestKm: number | null;
+  asean: boolean;
   items: ItemSummary[];
 }
 

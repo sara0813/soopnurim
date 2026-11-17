@@ -2,49 +2,46 @@
 import { Check } from "lucide-react";
 import { GROUPS } from "@/lib/groups";
 import { useGroups } from "@/lib/useGroups";
+import { useLang } from "@/lib/useLang";
 import { GROUP_ICON } from "./Icons";
 
 export default function GroupPicker({ compact = false }: { compact?: boolean }) {
   const { groups, toggle } = useGroups();
+  const { lang, t } = useLang();
   return (
     <fieldset>
       <legend className={compact ? "mb-2 text-sm font-semibold text-muted" : "mb-3 text-lg font-bold"}>
-        누구와 함께 가나요? <span className="font-normal text-muted">(중복 선택 가능)</span>
+        {t("누구와 함께 가나요?", "Who is traveling?")}{" "}
+        <span className="font-normal text-muted">{t("(중복 선택 가능)", "(choose any)")}</span>
       </legend>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {GROUPS.map((g) => {
           const on = groups.includes(g.id);
           const Icon = GROUP_ICON[g.id];
+          const label = lang === "en" ? g.label_en : g.label;
           return (
             <button
               key={g.id}
               type="button"
               aria-pressed={on}
               onClick={() => toggle(g.id)}
-              className={`relative flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2.5 text-center transition-colors sm:flex-row sm:justify-start sm:gap-3 sm:px-3.5 sm:text-left ${
-                on
-                  ? "border-brand-strong bg-brand-soft text-brand-strong"
-                  : "border-line-strong bg-surface hover:bg-surface-2"
+              className={`relative flex min-h-[56px] items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors ${
+                on ? "border-brand-strong bg-brand-soft text-brand-strong" : "border-line-strong bg-surface hover:bg-surface-2"
               }`}
             >
               <span
                 aria-hidden="true"
-                className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
+                className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${
                   on ? "bg-brand-fill text-white" : "bg-surface-2 text-muted"
                 }`}
               >
-                <Icon className="size-5" strokeWidth={2} />
+                <Icon className="size-[18px]" strokeWidth={2} />
               </span>
-              <span className="flex flex-col">
-                <span className="text-[0.92rem] font-semibold leading-tight sm:text-base">
-                  {g.label}
-                  {on && <span className="sr-only"> (선택됨)</span>}
-                </span>
-                {!compact && <span className="hidden text-xs text-muted sm:block">{g.desc}</span>}
+              <span className="min-w-0 pr-4 text-[0.9rem] font-semibold leading-tight">
+                {label}
+                {on && <span className="sr-only"> {t("(선택됨)", "(selected)")}</span>}
               </span>
-              {on && (
-                <Check aria-hidden="true" className="absolute right-2 top-2 size-4 sm:static sm:ml-auto" strokeWidth={3} />
-              )}
+              {on && <Check aria-hidden="true" className="absolute right-2 top-2 size-3.5" strokeWidth={3} />}
             </button>
           );
         })}

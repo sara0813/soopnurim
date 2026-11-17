@@ -5,9 +5,9 @@
  "nationalForests": 45,
  "nationalNotInStd": 32,
  "nanumCount": 167,
- "forestTotal": 200,
+ "forestTotal": 222,
  "nanumMatch": {
-  "3km 내 없음": 175,
+  "3km 내 없음": 193,
   "0.5km 이내": 17,
   "1~3km": 8
  },
@@ -69,12 +69,14 @@
   "kidsForest": 8,
   "healing": 9
  },
- "datasetsUsed": 16,
+ "datasetsUsed": 17,
+ "officialListAdded": 22,
+ "officialListTotal": 205,
  "toiletTotal": 33820,
  "toiletDiaperFilled": 0,
  "toiletHits": {
-  "any": 95,
-  "disabled": 51,
+  "any": 99,
+  "disabled": 53,
   "child": 13
  },
  "lotteryForests": 45,
@@ -86,6 +88,7 @@
   "natpolicy": 27192,
   "toilet": 33820,
   "jeju": 0,
+  "busstop": 227102,
   "natintro": 47,
   "natlayout": 2158,
   "natdiscount": 319,
@@ -102,67 +105,151 @@
    "dataset": "전국휴양림표준데이터",
    "problem": "표준 필드 17개 중 무장애(문턱·경사·장애인 객실·화장실 등) 관련 필드가 없음",
    "impact": "보행약자가 여정 단계별로 이용 가능 여부를 판단할 근거가 없음",
-   "proposal": "무장애 상세 필드 추가(제안 1)"
+   "proposal": "무장애 상세 필드 추가(제안 1)",
+   "dataset_en": "National Recreation Forest Standard Data",
+   "problem_en": "None of the 17 standard fields covers accessibility (thresholds, slopes, accessible rooms, toilets)",
+   "impact_en": "People with limited mobility have no evidence to judge each step of a trip",
+   "proposal_en": "Add detailed barrier-free fields (proposal 1)"
   },
   {
    "dataset": "전국휴양림표준데이터",
    "problem": "같은 휴양림이 시·군과 시·도 등 여러 제공기관에서 중복 등록됨 (17곳, 18건)",
    "impact": "목록·지도에 같은 숲이 두 번 나타나고, 기준일이 다른 정보가 서로 충돌",
-   "proposal": "휴양림 고유 ID(지정번호) 필드 추가, 제공기관 간 중복 등록 정리"
+   "proposal": "휴양림 고유 ID(지정번호) 필드 추가, 제공기관 간 중복 등록 정리",
+   "dataset_en": "National Recreation Forest Standard Data",
+   "problem_en": "The same forest is registered by several providers, e.g. both city and province (17 forests, 18 records)",
+   "impact_en": "The same forest appears twice in lists and maps, with conflicting dates",
+   "proposal_en": "Add a unique forest ID and clean up duplicates between providers"
+  },
+  {
+   "dataset": "전국휴양림표준데이터 ↔ 산림청 자연휴양림 목록",
+   "problem": "산림청 누리집의 자연휴양림 205곳과 대조하니, 표준데이터와 국립 시설정보 어디에도 없는 휴양림이 22곳 (서울 노원구 수락휴 등)",
+   "impact": "표준데이터만 쓰는 서비스에서는 서울처럼 휴양림이 있는 지역이 '0곳'으로 보이고, 새로 연 휴양림을 찾을 수 없음",
+   "proposal": "산림청 지정 자연휴양림 전체를 표준데이터에 등록하도록 제공 의무화, 지정·개장·폐장 날짜 필드 추가",
+   "dataset_en": "National Recreation Forest Standard Data ↔ Korea Forest Service forest list",
+   "problem_en": "Compared with the 205 recreation forests on the Korea Forest Service website, 22 are in neither the standard data nor the national facility data (e.g. Surakhyu in Nowon-gu, Seoul)",
+   "impact_en": "Services using only the standard data show regions such as Seoul as having no forests, and newly opened forests cannot be found",
+   "proposal_en": "Require every designated recreation forest to be registered in the standard data, and add designation, opening and closing dates"
   },
   {
    "dataset": "전국휴양림표준데이터 ↔ 국립자연휴양림 시설관련 정보",
    "problem": "국립자연휴양림 45곳 중 32곳이 전국휴양림표준데이터에 없음",
    "impact": "표준데이터만 쓰면 이용자가 많은 국립휴양림 상당수가 검색되지 않음",
-   "proposal": "국립자연휴양림관리소 운영 휴양림을 표준데이터에 포함, 두 데이터에 공통 휴양림 ID 부여"
+   "proposal": "국립자연휴양림관리소 운영 휴양림을 표준데이터에 포함, 두 데이터에 공통 휴양림 ID 부여",
+   "dataset_en": "Standard Data ↔ National Recreation Forest Facility Information",
+   "problem_en": "32 of 45 national forests are missing from the standard data",
+   "impact_en": "Using only the standard data, many popular national forests cannot be found",
+   "proposal_en": "Include all national forests in the standard data and give both datasets a shared forest ID"
   },
   {
    "dataset": "국립자연휴양림 시설관련 정보",
    "problem": "전화번호 필드가 없고, 주차는 객실(상품)당 대수만 있어 전체 주차장·장애인 주차구역 규모를 알 수 없음",
    "impact": "표준데이터에 없는 국립휴양림 32곳의 연락처를 찾으려면 별도 데이터셋(우선예약·추첨예약 정책)을 결합해야 함",
-   "proposal": "시설정보 데이터에 휴양림 대표 전화번호, 전체·장애인 주차면 수 필드 추가"
+   "proposal": "시설정보 데이터에 휴양림 대표 전화번호, 전체·장애인 주차면 수 필드 추가",
+   "dataset_en": "National Recreation Forest Facility Information",
+   "problem_en": "No phone field, and parking is only given per room, so total and accessible parking are unknown",
+   "impact_en": "Finding phone numbers for the 32 national forests missing from the standard data needs another dataset (booking policy)",
+   "proposal_en": "Add the forest's main phone number and total/accessible parking spaces"
   },
   {
    "dataset": "국립자연휴양림 시설관련 정보",
    "problem": "객실 무장애 정보가 '상품설명' 자유서술에만 있고, 문턱·안전손잡이·유모차 관련 언급 객실은 0실",
    "impact": "텍스트 분석으로도 객실 출입·욕실 안전 여부를 알 수 없음",
-   "proposal": "객실 단위 구조화 필드(출입구 단차, 문 폭, 침대/온돌, 욕실 손잡이) 추가"
+   "proposal": "객실 단위 구조화 필드(출입구 단차, 문 폭, 침대/온돌, 욕실 손잡이) 추가",
+   "dataset_en": "National Recreation Forest Facility Information",
+   "problem_en": "Room accessibility is only in free-text descriptions; no room mentions thresholds, grab bars or strollers",
+   "impact_en": "Even text analysis cannot tell whether rooms and bathrooms are accessible",
+   "proposal_en": "Add structured room fields (entrance step, door width, bed/ondol, bathroom grab bars)"
   },
   {
    "dataset": "무장애나눔길 조성정보 ↔ 전국휴양림표준데이터",
    "problem": "두 데이터 간 공통 ID가 없어 좌표 직선거리로만 연결 가능",
    "impact": "휴양림 안 나눔길인지 인근 공원 나눔길인지 구분 불가",
-   "proposal": "무장애나눔길 데이터에 '연계 휴양림 ID' 필드 추가(제안 2)"
+   "proposal": "무장애나눔길 데이터에 '연계 휴양림 ID' 필드 추가(제안 2)",
+   "dataset_en": "Barrier-free Trail Status ↔ Standard Data",
+   "problem_en": "No shared ID, so trails can only be linked by straight-line distance",
+   "impact_en": "Cannot tell a trail inside the forest from one in a nearby park",
+   "proposal_en": "Add a 'linked forest ID' field to the trail data (proposal 2)"
   },
   {
    "dataset": "무장애나눔길 조성정보",
    "problem": "필드가 연번·연도·기관·사업명·주소·좌표·길이 8개뿐, 경사도·노면·폭 없음",
    "impact": "'무장애'라는 이름만으로 실제 휠체어 주행 가능 여부 판단 불가",
-   "proposal": "평균·최대 경사, 노면 재질, 유효 폭, 쉼터 간격, 화장실 유무 필드 추가(제안 2)"
+   "proposal": "평균·최대 경사, 노면 재질, 유효 폭, 쉼터 간격, 화장실 유무 필드 추가(제안 2)",
+   "dataset_en": "Barrier-free Trail Status",
+   "problem_en": "Only 8 fields (number, year, agency, project, address, coordinates, length); no slope, surface or width",
+   "impact_en": "The 'barrier-free' name alone cannot tell whether a wheelchair can actually use the trail",
+   "proposal_en": "Add average/max slope, surface, usable width, rest-area spacing and toilet fields (proposal 2)"
   },
   {
    "dataset": "전국공중화장실표준데이터",
    "problem": "'기저귀교환대장소' 필드가 전국 33,820건 중 0건만 채워짐, 좌표 없는 화장실 6,794건",
    "impact": "유아 동반 가족이 휴양림 주변 기저귀 교환 시설을 공공데이터로 찾을 수 없음",
-   "proposal": "기저귀교환대 유무(Y/N) 필드 의무 입력, 휴양림 내 화장실은 휴양림 ID 연계"
+   "proposal": "기저귀교환대 유무(Y/N) 필드 의무 입력, 휴양림 내 화장실은 휴양림 ID 연계",
+   "dataset_en": "National Public Toilet Standard Data",
+   "problem_en": "The diaper station field is filled for only 0 of 33,820 toilets; 6,794 toilets have no coordinates",
+   "impact_en": "Families with infants cannot find diaper stations near forests from public data",
+   "proposal_en": "Make a diaper station Y/N field mandatory and link toilets inside forests to the forest ID"
+  },
+  {
+   "dataset": "전국휴양림표준데이터 '홈페이지주소'",
+   "problem": "숲나들e 개별 하위 도메인 주소(예: godaesan.foresttrip.go.kr) 12곳이 접속하면 '요청하신 페이지를 찾을수 없습니다'로 이어짐",
+   "impact": "예약하려고 홈페이지 링크를 누른 이용자가 오류 화면을 보고 예약 경로를 잃음",
+   "proposal": "홈페이지주소를 숲나들e 통합 주소(www.foresttrip.go.kr/indvz/main.do?hmpgId=…)로 갱신, 링크 유효성 정기 점검",
+   "dataset_en": "National Recreation Forest Standard Data 'homepage'",
+   "problem_en": "12 Foresttrip sub-domain addresses (e.g. godaesan.foresttrip.go.kr) lead to a 'page not found' error",
+   "impact_en": "Visitors who click the website link to book end up on an error page",
+   "proposal_en": "Update to the unified Foresttrip address (www.foresttrip.go.kr/indvz/main.do?hmpgId=…) and check links regularly"
   },
   {
    "dataset": "국립자연휴양림관리소 데이터 전반",
    "problem": "데이터셋마다 휴양림 표기('속리산 자연휴양림'·'속리산 말티재자연휴양림')와 기관아이디 형식('101'·'0101'·'ID02030103')이 달라 결합 시 별칭표가 필요",
    "impact": "같은 휴양림의 할인·배치도·안전점검 정보를 자동으로 모으기 어렵고, 누락이 생겨도 알아차리기 어려움",
-   "proposal": "국립자연휴양림관리소 데이터 전체에 같은 형식의 휴양림 ID 사용, 전국휴양림표준데이터에도 같은 ID 부여"
+   "proposal": "국립자연휴양림관리소 데이터 전체에 같은 형식의 휴양림 ID 사용, 전국휴양림표준데이터에도 같은 ID 부여",
+   "dataset_en": "National Forest Recreation Service data in general",
+   "problem_en": "Forest names and agency ID formats ('101', '0101', 'ID02030103') differ between datasets, so joining needs an alias table",
+   "impact_en": "Discounts, maps and safety checks for the same forest are hard to combine, and gaps go unnoticed",
+   "proposal_en": "Use one forest ID format across all datasets and give the standard data the same ID"
   },
   {
    "dataset": "국립자연휴양림 월별 안전점검표",
    "problem": "점검 항목에 계단 미끄럼방지·AED는 있으나 경사로·장애인 객실·장애인 화장실 상태 점검 항목은 없음",
    "impact": "보행약자가 가장 궁금한 시설의 최근 상태를 공공데이터로 확인할 수 없음",
-   "proposal": "안전점검표에 무장애 시설(경사로·장애인 객실 출입문·장애인 화장실) 점검 항목 추가"
+   "proposal": "안전점검표에 무장애 시설(경사로·장애인 객실 출입문·장애인 화장실) 점검 항목 추가",
+   "dataset_en": "National Recreation Forest Monthly Safety Checks",
+   "problem_en": "Checks cover non-slip stairs and AEDs but not ramps, accessible rooms or accessible toilets",
+   "impact_en": "The current state of the facilities people with limited mobility care about most is not in public data",
+   "proposal_en": "Add barrier-free items (ramps, accessible room doors, accessible toilets) to the checklist"
   },
   {
    "dataset": "유아숲체험원 현황 / 치유의숲 현황",
    "problem": "주소만 있고 위경도·휴양림 ID가 없음",
    "impact": "휴양림 안에 있는 시설인지 이름 일부와 시·군·구로만 추정 가능",
-   "proposal": "위경도와 소재 휴양림(산림휴양시설) ID 필드 추가"
+   "proposal": "위경도와 소재 휴양림(산림휴양시설) ID 필드 추가",
+   "dataset_en": "Children's Forest Centers / Healing Forests",
+   "problem_en": "Only addresses; no coordinates or forest ID",
+   "impact_en": "Whether a place is inside a forest can only be guessed from its name and city/county",
+   "proposal_en": "Add coordinates and the ID of the forest it belongs to"
+  },
+  {
+   "dataset": "국토교통부_전국 버스정류장 위치정보",
+   "problem": "TAGO에 연계된 시·군만 포함되고, 정류장별 노선·배차 정보가 없음",
+   "impact": "휴양림 22곳은 3km 안에 정류장이 없거나 데이터가 없어 구분할 수 없음. 버스가 하루 몇 번 오는지 알 수 없음",
+   "proposal": "전 시·군 정류장 포함, 휴양림 진입로 기준 정류장·노선·첫차/막차 정보를 휴양림 데이터에 연결",
+   "dataset_en": "Nationwide Bus Stop Locations",
+   "problem_en": "Only cities linked to TAGO are included, and there are no routes or timetables per stop",
+   "impact_en": "For 22 forests we cannot tell whether there is no stop within 3 km or the data is missing; bus frequency is unknown",
+   "proposal_en": "Cover all cities and counties, and link the stop, routes and first/last bus at each forest entrance to forest data"
+  },
+  {
+   "dataset": "국립자연휴양림 시설관련 정보 / 우선예약 및 추첨예약 정책",
+   "problem": "외국인 회원가입·본인인증·결제·입실 신분증 정보가 없고, 입·퇴실 시간과 바비큐 제한은 객실 설명 자유서술에만 있음",
+   "impact": "외국인 여행자가 예약할 수 있는지, 현장 규칙이 무엇인지 공공데이터로 미리 알 수 없음",
+   "proposal": "외국인 예약 가능 여부·인정 신분증·해외 카드 결제 필드와 입·퇴실·취사 규칙 구조화 필드 추가, 영문 병기",
+   "dataset_en": "National Recreation Forest Facility Information / Booking Policy",
+   "problem_en": "No data on foreigner sign-up, identity check, payment or ID at check-in; check-in times and barbecue rules exist only in free text",
+   "impact_en": "Foreign visitors cannot learn from public data whether they can book or what the on-site rules are",
+   "proposal_en": "Add fields for foreigner booking, accepted ID and foreign card payment, structured check-in and cooking rules, and English text"
   }
  ]
 }

@@ -6,6 +6,9 @@ import "leaflet.markercluster";
 import { useEffect, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import type { ForestSummary, NanumPoint, ToiletPoint } from "@/lib/types";
+import { pick, type Lang } from "@/lib/i18n";
+import { nameOf } from "@/lib/romanize";
+import { useLang } from "@/lib/useLang";
 
 export interface MapLayers {
   nanum: boolean;
@@ -34,7 +37,7 @@ const forestIcon = (selected: boolean, closed: boolean) =>
     iconAnchor: [18, 18],
   });
 
-function ForestLayer({ forests, selectedId, onSelect }: Pick<Props, "forests" | "selectedId" | "onSelect">) {
+function ForestLayer({ forests, selectedId, onSelect, lang }: Pick<Props, "forests" | "selectedId" | "onSelect"> & { lang: Lang }) {
   const map = useMap();
   const groupRef = useRef<L.MarkerClusterGroup | null>(null);
   const markers = useRef(new Map<string, L.Marker>());
@@ -58,8 +61,8 @@ function ForestLayer({ forests, selectedId, onSelect }: Pick<Props, "forests" | 
       if (f.lat == null || f.lng == null) continue;
       const m = L.marker([f.lat, f.lng], {
         icon: forestIcon(false, f.closed),
-        title: f.name,
-        alt: f.name,
+        title: nameOf(lang, f.name),
+        alt: nameOf(lang, f.name),
         keyboard: true,
       });
       m.on("click", () => onSelect(f.id));
@@ -94,36 +97,67 @@ function ForestLayer({ forests, selectedId, onSelect }: Pick<Props, "forests" | 
   return null;
 }
 
-function PointLayer({ points, kind }: { points: (NanumPoint | ToiletPoint)[]; kind: "nanum" | "toilet" }) {
+/**
+ * 팝업 내용: 공공데이터의 이름·기관명은 외부에서 온 문자열이므로 HTML로 끼워 넣지 않고
+ * DOM 노드를 만들어 textContent로만 넣는다.
+ */
+function popupNode(title: string, lines: string[], source: string) {
+  const root = document.createElement("div");
+  const strong = document.createElement("strong");
+  strong.textContent = title;
+  root.append(strong);
+  for (const l of lines) {
+    root.append(document.createElement("br"), document.createTextNode(l));
+  }
+  const small = document.createElement("small");
+  small.textContent = source;
+  root.append(document.createElement("br"), small);
+  return root;
+}
+
+function PointLayer({ points, kind, lang }: { points: (NanumPoint | ToiletPoint)[]; kind: "nanum" | "toilet"; lang: Lang }) {
   const map = useMap();
   useEffect(() => {
+    const t = pick(lang);
     const layer = L.layerGroup(
       points.map((p) => {
         const isN = kind === "nanum";
         const n = p as NanumPoint;
-        const t = p as ToiletPoint;
+        const x = p as ToiletPoint;
+        const node = isN
+          ? popupNode(
+              n.name,
+              [
+                t("무장애나눔길", "Barrier-free trail") +
+                  (n.lengthM ? ` · ${n.lengthM.toLocaleString()}${t("m", " m")}` : "") +
+                  ` · ${t(`${n.year}년 조성`, `built ${n.year}`)}`,
+                `${t("관리", "Managed by")}: ${n.org}`,
+              ],
+              t("출처: 무장애나눔길 조성정보", "Source: Barrier-free Trail Status"),
+            )
+          : popupNode(
+              x.name,
+              [t(`장애인용 대변기 ${x.disabled}개 · 어린이용 ${x.child}개`, `Accessible toilets ${x.disabled} · children's ${x.child}`)],
+              t("출처: 전국공중화장실표준데이터", "Source: National Public Toilet Standard Data"),
+            );
         return L.circleMarker([p.lat, p.lng], {
           radius: isN ? 7 : 6,
           color: isN ? "#793400" : "#005bab",
           fillColor: isN ? "#dd5b00" : "#0075de",
           fillOpacity: 0.9,
           weight: 2,
-        }).bindPopup(
-          isN
-            ? `<strong>${n.name}</strong><br>무장애나눔길${n.lengthM ? ` · ${n.lengthM.toLocaleString()}m` : ""} · ${n.year}년 조성<br>관리: ${n.org}<br><small>출처: 무장애나눔길 조성정보</small>`
-            : `<strong>${t.name}</strong><br>장애인용 대변기 ${t.disabled}개 · 어린이용 ${t.child}개<br><small>출처: 전국공중화장실표준데이터</small>`,
-        );
+        }).bindPopup(node);
       }),
     );
     map.addLayer(layer);
     return () => {
       map.removeLayer(layer);
     };
-  }, [points, kind, map]);
+  }, [points, kind, map, lang]);
   return null;
 }
 
-function MyLocation({ myLoc }: { myLoc: Props["myLoc"] }) {
+function MyLocation({ myLoc, label }: { myLoc: Props["myLoc"]; label: string }) {
   const map = useMap();
   useEffect(() => {
     if (!myLoc) return;
@@ -133,31 +167,35 @@ function MyLocation({ myLoc }: { myLoc: Props["myLoc"] }) {
       weight: 3,
       fillColor: "#ff64c8",
       fillOpacity: 1,
-    }).bindTooltip("내 위치");
+    }).bindTooltip(label);
     m.addTo(map);
     return () => {
       m.remove();
     };
-  }, [myLoc, map]);
+  }, [myLoc, map, label]);
   return null;
 }
 
 export default function ForestMap(props: Props) {
+  const { lang, t } = useLang();
   const toiletPts = useMemo(() => props.toilets.filter((t) => t.disabled > 0 || t.child > 0), [props.toilets]);
   return (
     <div className="relative">
       <p className="sr-only">
-        지도는 마우스·터치 조작용입니다. 화면낭독기 사용자는 목록 보기에서 같은 정보를 확인할 수 있습니다.
+        {t(
+          "지도는 마우스·터치 조작용입니다. 화면낭독기 사용자는 목록 보기에서 같은 정보를 확인할 수 있습니다.",
+          "The map is for mouse and touch. Screen reader users can find the same information in the list view.",
+        )}
       </p>
       <MapContainer center={[36.3, 127.8]} zoom={7} scrollWheelZoom style={{ height: "min(70vh, 640px)", minHeight: 420 }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {props.layers.nanum && <PointLayer points={props.nanum} kind="nanum" />}
-        {props.layers.toilet && <PointLayer points={toiletPts} kind="toilet" />}
-        <ForestLayer forests={props.forests} selectedId={props.selectedId} onSelect={props.onSelect} />
-        <MyLocation myLoc={props.myLoc} />
+        {props.layers.nanum && <PointLayer points={props.nanum} kind="nanum" lang={lang} />}
+        {props.layers.toilet && <PointLayer points={toiletPts} kind="toilet" lang={lang} />}
+        <ForestLayer forests={props.forests} selectedId={props.selectedId} onSelect={props.onSelect} lang={lang} />
+        <MyLocation myLoc={props.myLoc} label={t("내 위치", "My location")} />
       </MapContainer>
     </div>
   );

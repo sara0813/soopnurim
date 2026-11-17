@@ -19,6 +19,8 @@ export interface StoredReport {
   hidden: boolean;
   /** "lens" = 사진을 보고 AI 제안을 이용자가 확인해 남긴 제보 */
   via?: "lens";
+  /** 신고한 이용자(접속 주소의 솔트 해시 앞 16자). 같은 사람의 중복 신고를 막는 데만 쓰고 공개하지 않는다 */
+  flaggedBy?: string[];
 }
 
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
@@ -97,4 +99,11 @@ export function rateLimited(ip: string, max = 8, windowMs = 10 * 60 * 1000) {
   arr.push(now);
   hits.set(ip, arr);
   return arr.length > max;
+}
+
+/** 접속 주소를 그대로 저장하지 않도록 서버 비밀값을 섞어 해시한다 */
+export async function visitorKey(ip: string) {
+  const salt = process.env.FLAG_SALT || process.env.ADMIN_TOKEN || "soopnurim";
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${salt}:${ip}`));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
 }

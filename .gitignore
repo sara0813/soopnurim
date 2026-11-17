@@ -43,3 +43,6 @@ next-env.d.ts
 # 로컬 이용자 제보(개발용)
 /.data/
 __pycache__/
+
+# 전국 버스정류장 원본(22MB) - 휴양림 근처만 추린 busstop_near.json을 커밋
+/data/raw/extra/15067528.csv

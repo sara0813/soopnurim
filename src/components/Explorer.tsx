@@ -7,9 +7,11 @@ import {
   ArrowRight,
   Baby,
   BedDouble,
+  Bus,
   CalendarCheck,
   ChevronDown,
   FileCheck2,
+  Globe2,
   List,
   LocateFixed,
   Map as MapIcon,
@@ -31,29 +33,32 @@ import type { MapLayers } from "./ForestMap";
 import { bookingLink } from "@/lib/booking";
 import { sidoOptions, sidoRank, sidoShort } from "@/lib/regions";
 import { coverage } from "@/lib/coverage";
-import { groupsMask } from "@/lib/groups";
+import { ACCESS_MASK, GROUPS, groupsMask } from "@/lib/groups";
+import { fixedEn, href, kmOf, type Lang } from "@/lib/i18n";
+import { nameOf, placeEn, regionOf, sidoEn } from "@/lib/romanize";
 import { useGroups } from "@/lib/useGroups";
+import { useLang } from "@/lib/useLang";
 import type { ForestSummary, NanumPoint, ToiletPoint } from "@/lib/types";
 
 const ForestMap = dynamic(() => import("./ForestMap"), {
   ssr: false,
-  loading: () => <p className="p-6 text-center text-muted">지도를 불러오는 중…</p>,
+  loading: () => <p className="p-6 text-center text-muted">…</p>,
 });
 
-const km = (d: number) => (d < 0.05 ? "50m 미만" : d < 1 ? `${Math.round(d * 1000)}m` : `${d.toFixed(1)}km`);
 const PAGE = 24;
 const STATE_KEY = "soopnurim.explorer";
 
 const CHIPS = [
-  { id: "stay", label: "숙박 가능", test: (f: ForestSummary) => f.stay === true },
-  { id: "disabledRoom", label: "장애인 추첨·우선예약 객실", test: (f: ForestSummary) => f.disabledLotteryRooms > 0 },
-  { id: "discount", label: "장애인 할인", test: (f: ForestSummary) => f.discount },
-  { id: "disabledToilet", label: "1.5km 안 장애인 화장실", test: (f: ForestSummary) => !!f.nearestDisabledToilet },
-  { id: "nanum", label: "무장애나눔길 3km 안", test: (f: ForestSummary) => !!f.nanumNearest },
-  { id: "kids", label: "유아숲체험원", test: (f: ForestSummary) => f.kidsForest },
-  { id: "multiChild", label: "다자녀 추첨 객실", test: (f: ForestSummary) => f.multiChildLotteryRooms > 0 },
-  { id: "national", label: "국립", test: (f: ForestSummary) => f.ownership === "국유림" },
-  { id: "open", label: "휴장 제외", test: (f: ForestSummary) => !f.closed },
+  { id: "stay", label: "숙박 가능", en: "Overnight stay", test: (f: ForestSummary) => f.stay === true },
+  { id: "disabledRoom", label: "장애인 추첨·우선예약 객실", en: "Disabled lottery/priority rooms", test: (f: ForestSummary) => f.disabledLotteryRooms > 0 },
+  { id: "discount", label: "장애인 할인", en: "Disability discount", test: (f: ForestSummary) => f.discount },
+  { id: "disabledToilet", label: "1.5km 안 장애인 화장실", en: "Accessible toilet within 1.5 km", test: (f: ForestSummary) => !!f.nearestDisabledToilet },
+  { id: "nanum", label: "무장애나눔길 3km 안", en: "Barrier-free trail within 3 km", test: (f: ForestSummary) => !!f.nanumNearest },
+  { id: "bus", label: "버스정류장 1km 안", en: "Bus stop within 1 km", test: (f: ForestSummary) => f.busNearestKm != null && f.busNearestKm <= 1 },
+  { id: "kids", label: "유아숲체험원", en: "Children's forest", test: (f: ForestSummary) => f.kidsForest },
+  { id: "multiChild", label: "다자녀 추첨 객실", en: "Large-family lottery", test: (f: ForestSummary) => f.multiChildLotteryRooms > 0 },
+  { id: "national", label: "국립", en: "National", test: (f: ForestSummary) => f.ownership === "국유림" },
+  { id: "open", label: "휴장 제외", en: "Hide closed", test: (f: ForestSummary) => !f.closed },
 ] as const;
 type ChipId = (typeof CHIPS)[number]["id"];
 
@@ -76,19 +81,35 @@ function hav(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   return 6371 * 2 * Math.asin(Math.sqrt(x));
 }
 
+type Row = { f: ForestSummary; cov: { known: number; total: number }; dist: number | null };
+const ratio = (c: { known: number; total: number }) => (c.total ? c.known / c.total : 0);
+
+/** 거리순: 위치(좌표)가 없는 휴양림은 맨 뒤, 나머지는 가까운 순 */
+function byDistance(a: { dist: number | null }, b: { dist: number | null }) {
+  if (a.dist === null && b.dist === null) return 0;
+  if (a.dist === null) return 1;
+  if (b.dist === null) return -1;
+  return a.dist - b.dist;
+}
+
 export default function Explorer({
   forests,
   nanum,
   toilets,
   datasetCount,
+  exampleId,
 }: {
   forests: ForestSummary[];
   nanum: NanumPoint[];
   toilets: ToiletPoint[];
   datasetCount: number;
+  exampleId: string | null;
 }) {
+  const { lang, t } = useLang();
+  const en = lang === "en";
   const { groups } = useGroups();
-  const mask = groupsMask(groups);
+  // 유형을 고르지 않았을 때의 분모: 한국어 화면은 보행약자 세 유형, 영어 화면은 외국인 항목까지 모두
+  const mask = groupsMask(groups) || (en ? 0 : ACCESS_MASK);
   const [st, setSt] = useState<UiState>(DEFAULT);
   const [limit, setLimit] = useState(PAGE);
   const [myLoc, setMyLoc] = useState<{ lat: number; lng: number } | null>(null);
@@ -96,6 +117,8 @@ export default function Explorer({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [layers, setLayers] = useState<MapLayers>({ nanum: true, toilet: false });
   const [panelOpen, setPanelOpen] = useState(false);
+  const display = useMemo(() => new Map(forests.map((f) => [f.id, nameOf(lang, f.name)])), [forests, lang]);
+  const nm = (f: ForestSummary) => display.get(f.id) ?? f.name;
 
   // 상세 페이지에서 돌아왔을 때 검색 조건 유지 (이 브라우저에만 저장)
   useEffect(() => {
@@ -125,12 +148,19 @@ export default function Explorer({
 
   // 검색어·조건을 적용한 휴양림 (지역 선택 전). 시·도·시·군·구 옆 숫자도 이 기준으로 센다.
   const base = useMemo(() => {
-    const kw = st.q.trim().replace(/\s/g, "");
+    const kw = st.q.trim().replace(/\s/g, "").toLowerCase();
     const active = CHIPS.filter((c) => st.chips.includes(c.id));
     return forests
-      .filter((f) => !kw || (f.name + f.address + f.sido + sidoShort(f.sido) + f.sigungu).replace(/\s/g, "").includes(kw))
+      .filter(
+        (f) =>
+          !kw ||
+          (f.name + f.address + f.sido + sidoShort(f.sido) + f.sigungu + (display.get(f.id) ?? "") + sidoEn(f.sido) + placeEn(f.sigungu))
+            .replace(/\s/g, "")
+            .toLowerCase()
+            .includes(kw),
+      )
       .filter((f) => active.every((c) => c.test(f)));
-  }, [forests, st.q, st.chips]);
+  }, [forests, st.q, st.chips, display]);
   const sidos = useMemo(() => {
     const counts = new Map<string, number>();
     for (const f of forests) if (f.sido && !counts.has(f.sido)) counts.set(f.sido, 0);
@@ -145,7 +175,7 @@ export default function Explorer({
   }, [forests, base, st.sido]);
 
   const rows = useMemo(() => {
-    const out = base
+    const out: Row[] = base
       .filter((f) => !st.sido || f.sido === st.sido)
       .filter((f) => !st.sgg || f.sigungu === st.sgg)
       .map((f) => ({
@@ -153,78 +183,104 @@ export default function Explorer({
         cov: coverage(f.items, mask),
         dist: myLoc && f.lat != null && f.lng != null ? hav(myLoc, { lat: f.lat, lng: f.lng }) : null,
       }));
-    const byName = (a: (typeof out)[0], b: (typeof out)[0]) => a.f.name.localeCompare(b.f.name, "ko");
+    const byName = (a: Row, b: Row) => nm(a.f).localeCompare(nm(b.f), en ? "en" : "ko");
     out.sort((a, b) => {
-      if (st.sort === "distance" && a.dist != null && b.dist != null) return a.dist - b.dist;
-      if (st.sort === "coverage") return b.cov.known / b.cov.total - a.cov.known / a.cov.total || byName(a, b);
+      if (st.sort === "distance") return byDistance(a, b) || byName(a, b);
+      if (st.sort === "coverage") return ratio(b.cov) - ratio(a.cov) || b.cov.known - a.cov.known || byName(a, b);
       if (st.sort === "region")
         return sidoRank(a.f.sido) - sidoRank(b.f.sido) || a.f.sigungu.localeCompare(b.f.sigungu, "ko") || byName(a, b);
       return byName(a, b);
     });
     return out;
-  }, [base, st.sido, st.sgg, st.sort, mask, myLoc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [base, st.sido, st.sgg, st.sort, mask, myLoc, en, display]);
 
   const locate = () => {
     if (!("geolocation" in navigator)) {
-      setLocMsg("이 브라우저는 위치 기능을 지원하지 않습니다.");
+      setLocMsg(t("이 브라우저는 위치 기능을 지원하지 않습니다.", "This browser does not support location."));
       return;
     }
-    setLocMsg("위치를 찾는 중…");
+    setLocMsg(t("위치를 찾는 중…", "Finding your location…"));
     navigator.geolocation.getCurrentPosition(
       (p) => {
         setMyLoc({ lat: p.coords.latitude, lng: p.coords.longitude });
-        setLocMsg("내 위치에서 가까운 순으로 정렬했습니다. 위치는 이 기기 안에서만 쓰이고 저장·전송하지 않습니다.");
+        setLocMsg(
+          t(
+            "내 위치에서 가까운 순(직선거리)으로 정렬했습니다. 위치는 이 기기 안에서만 쓰이고 저장·전송하지 않습니다.",
+            "Sorted by straight-line distance from you. Your location stays on this device and is not stored or sent.",
+          ),
+        );
         update({ sort: "distance" });
       },
-      () => setLocMsg("위치를 가져오지 못했습니다. 브라우저의 위치 권한을 확인해 주세요."),
+      () => setLocMsg(t("위치를 가져오지 못했습니다. 브라우저의 위치 권한을 확인해 주세요.", "Could not get your location. Check the browser's location permission.")),
       { enableHighAccuracy: false, timeout: 10000 },
     );
   };
 
-  const itemCount = forests[0]?.items.length ?? 0;
-  // 처음 온 사람이 바로 눌러 볼 예시: 정보가 가장 많이 채워진 휴양림 (휴장 제외)
-  const example = useMemo(() => {
-    let best: ForestSummary | null = null;
-    let bestK = -1;
-    for (const f of forests) {
-      if (f.closed) continue;
-      const k = coverage(f.items, 0).known;
-      if (k > bestK) [best, bestK] = [f, k];
-    }
-    return best;
-  }, [forests]);
+  const example = forests.find((f) => f.id === exampleId) ?? null;
+  const itemTotal = forests[0] ? coverage(forests[0].items, mask).total : 0;
   const selected = rows.find((r) => r.f.id === selectedId) ?? null;
   const activeCount = (st.sido ? 1 : 0) + st.chips.filter((c) => c !== "open").length + (st.sort !== "name" ? 1 : 0);
   const filtered = st.q || st.sido || st.chips.length > 1 || (st.chips.length === 1 && st.chips[0] !== "open");
+  const groupNames = groups.length
+    ? GROUPS.filter((g) => groups.includes(g.id))
+        .map((g) => (en ? g.label_en : g.label))
+        .join(", ")
+    : "";
 
   return (
     <div className="space-y-5">
       <section aria-labelledby="intro" className="space-y-3 pt-1">
         <p className="eyebrow">
-          공공데이터 {datasetCount}종 · 휴양림 {forests.length}곳
+          {t(`숲누림 · 공공데이터 ${datasetCount}종 · 휴양림 ${forests.length}곳`, `Soopnurim · ${datasetCount} open datasets · ${forests.length} forests`)}
         </p>
         <h1 id="intro" className="text-[1.6rem] font-bold leading-snug sm:text-[2rem]">
-          휴양림 예약 전에,
-          <br /> 우리 가족이 이용할 수 있을지 확인하세요
+          {en ? (
+            <>
+              Your family&rsquo;s forest trip:
+              <br /> check before you go
+            </>
+          ) : (
+            <>
+              우리 가족의 숲 여행,
+              <br /> 출발 전에 확인하세요
+            </>
+          )}
         </h1>
-        <p className="text-muted">휠체어·고령자·유아 동반 가족을 위한 휴양림 정보</p>
+        <p className="max-w-2xl text-muted">
+          {t(
+            "휠체어·고령자·유아 동반 가족과 외국인 여행자를 위해 흩어진 휴양림 정보를 모았어요. 확인된 정보는 출처와 함께, 부족한 정보는 물어볼 질문으로 안내합니다.",
+            "Scattered information on Korea's recreation forests, gathered for wheelchair users, older adults, families with young children and foreign visitors. Verified facts come with sources; missing ones become questions to ask.",
+          )}
+        </p>
         {example && (
-          <Link href={`/forest/${example.id}`} className="btn btn-primary">
-            예시 보기: {example.name}
-            <ArrowRight aria-hidden="true" className="size-4" />
+          <Link href={href(lang, `/forest/${example.id}`)} className="btn btn-primary btn-wrap">
+            <span className="min-w-0">
+              {t("예시 보기", "See an example")}: {nm(example)}
+            </span>
+            <ArrowRight aria-hidden="true" className="size-4 shrink-0" />
           </Link>
         )}
         <ul className="card grid divide-y divide-line sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           {[
-            { icon: FileCheck2, title: "있는 정보는 출처와 함께", text: `주차부터 숲길까지 ${itemCount}개 항목` },
-            { icon: PhoneCall, title: "없는 정보는 질문으로", text: "운영기관에 물어볼 말을 정리해 드려요" },
-            { icon: MessageSquareText, title: "다녀온 사람의 제보", text: "실제 상태를 방문 시기와 함께" },
+            {
+              icon: FileCheck2,
+              title: t("확인된 정보는 출처와 함께", "Verified facts, with sources"),
+              text: t("예약부터 숲길·안전까지 단계별로", "Step by step, from booking to trails and safety"),
+            },
+            {
+              icon: PhoneCall,
+              title: t("미확인 정보는 질문으로", "Unverified items become questions"),
+              text: t("운영기관에 물어볼 말을 정리해 드려요", "Ready-made questions in Korean for the operator"),
+            },
+            {
+              icon: MessageSquareText,
+              title: t("다녀온 사람의 제보", "Reports from visitors"),
+              text: t("실제 상태를 방문 시기와 함께", "What they found, with the visit date"),
+            },
           ].map(({ icon: Icon, title, text }) => (
             <li key={title} className="flex items-center gap-3 px-4 py-3.5">
-              <span
-                aria-hidden="true"
-                className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-fg"
-              >
+              <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-fg">
                 <Icon className="size-[18px]" strokeWidth={2} />
               </span>
               <span className="min-w-0">
@@ -236,27 +292,36 @@ export default function Explorer({
         </ul>
       </section>
 
-      <div className="card p-4">
+      <div className="card space-y-2 p-4">
         <GroupPicker compact />
+        <p className="text-sm text-muted">
+          {groups.length
+            ? t(
+                `정보 확인도는 ${groupNames}에게 필요한 ${itemTotal}개 항목 기준이에요.`,
+                `Info coverage counts the ${itemTotal} items needed by: ${groupNames}.`,
+              )
+            : t(
+                `아무도 고르지 않으면 휠체어·고령자·유아 동반에 필요한 ${itemTotal}개 항목 기준으로 정보 확인도를 보여 드려요.`,
+                `With no one selected, info coverage counts all ${itemTotal} items, including those for foreign visitors.`,
+              )}{" "}
+          {t(
+            "정보가 많다는 뜻이지, 시설이 더 안전하거나 이용하기 좋다는 뜻은 아니에요.",
+            "More information does not mean the forest is safer or easier to use.",
+          )}
+        </p>
       </div>
 
       {/* 검색·필터: 검색줄만 위에 고정, 상세 조건은 펼쳐서 */}
-      <section
-        aria-label="검색과 필터"
-        className="card sticky top-0 z-[1100] space-y-3 p-3 shadow-[0_4px_12px_rgb(15_15_15/0.06)]"
-      >
+      <section aria-label={t("검색과 필터", "Search and filters")} className="card sticky top-0 z-[1100] space-y-3 p-3 shadow-[0_4px_12px_rgb(15_15_15/0.06)]">
         <div className="flex gap-2">
           <label className="relative flex-1">
-            <span className="sr-only">숲 이름·지역 검색</span>
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
-            />
+            <span className="sr-only">{t("숲 이름·지역 검색", "Search by forest or area")}</span>
+            <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
             <input
               type="search"
               value={st.q}
               onChange={(e) => update({ q: e.target.value })}
-              placeholder="숲 이름이나 지역 (예: 유명산, 가평)"
+              placeholder={t("숲 이름이나 지역 (예: 유명산, 가평)", "Forest or area (e.g. Yumyeongsan, Gapyeong)")}
               className="field pl-9"
             />
           </label>
@@ -268,54 +333,55 @@ export default function Explorer({
             onClick={() => setPanelOpen((o) => !o)}
           >
             <SlidersHorizontal aria-hidden="true" className="size-4" />
-            필터{activeCount ? ` ${activeCount}` : ""}
+            {t("필터", "Filters")}
+            {activeCount ? ` ${activeCount}` : ""}
             <ChevronDown aria-hidden="true" className={`size-4 transition-transform ${panelOpen ? "rotate-180" : ""}`} />
           </button>
         </div>
         <div id="filter-panel" className={`${panelOpen ? "block" : "hidden"} space-y-3 sm:block`}>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             <label className="flex flex-col gap-1">
-              <span className="label">시·도</span>
+              <span className="label">{t("시·도", "Province")}</span>
               <select value={st.sido} onChange={(e) => update({ sido: e.target.value, sgg: "" })} className="field">
-                <option value="">전국 ({base.length}곳)</option>
+                <option value="">{t(`전국 (${base.length}곳)`, `All Korea (${base.length})`)}</option>
                 {sidos.map((s) => (
                   <option key={s.name} value={s.name} disabled={s.count === 0 && s.name !== st.sido}>
-                    {s.short} ({s.count}곳)
+                    {en ? sidoEn(s.name) : s.short} ({t(`${s.count}곳`, `${s.count}`)})
                   </option>
                 ))}
               </select>
             </label>
             <label className="flex flex-col gap-1">
-              <span className="label">시·군·구</span>
-              <select
-                value={st.sgg}
-                onChange={(e) => update({ sgg: e.target.value })}
-                className="field disabled:opacity-50"
-                disabled={!st.sido}
-              >
-                <option value="">{st.sido ? `전체 (${sidos.find((x) => x.name === st.sido)?.count ?? 0}곳)` : "시·도 먼저 선택"}</option>
+              <span className="label">{t("시·군·구", "City / county")}</span>
+              <select value={st.sgg} onChange={(e) => update({ sgg: e.target.value })} className="field disabled:opacity-50" disabled={!st.sido}>
+                <option value="">
+                  {st.sido
+                    ? t(`전체 (${sidos.find((x) => x.name === st.sido)?.count ?? 0}곳)`, `All (${sidos.find((x) => x.name === st.sido)?.count ?? 0})`)
+                    : t("시·도 먼저 선택", "Choose a province first")}
+                </option>
                 {sggs.map((s) => (
                   <option key={s.name} value={s.name} disabled={s.count === 0 && s.name !== st.sgg}>
-                    {s.name} ({s.count}곳)
+                    {en ? placeEn(s.name) : s.name} ({t(`${s.count}곳`, `${s.count}`)})
                   </option>
                 ))}
               </select>
             </label>
             <label className="col-span-2 flex flex-col gap-1 sm:col-span-1">
-              <span className="label">정렬</span>
+              <span className="label">{t("정렬", "Sort")}</span>
               <select value={st.sort} onChange={(e) => update({ sort: e.target.value as Sort })} className="field">
-                <option value="name">이름순</option>
-                <option value="region">지역순</option>
-                <option value="coverage">정보 확인도 높은 순</option>
+                <option value="name">{t("이름순", "Name")}</option>
+                <option value="region">{t("지역순", "Region")}</option>
+                <option value="coverage">{t("확인된 정보 많은 순", "Most verified info")}</option>
                 <option value="distance" disabled={!myLoc}>
-                  내 위치에서 가까운 순{myLoc ? "" : " (내 위치 필요)"}
+                  {t("내 위치에서 가까운 순", "Nearest to me")}
+                  {myLoc ? "" : t(" (내 위치 필요)", " (needs location)")}
                 </option>
               </select>
             </label>
           </div>
-          <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible" role="group" aria-label="조건 필터">
+          <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible" role="group" aria-label={t("조건 필터", "Filters")}>
             <button type="button" className="chip" aria-pressed={!!myLoc} onClick={locate}>
-              <LocateFixed aria-hidden="true" className="size-4" /> 내 위치
+              <LocateFixed aria-hidden="true" className="size-4" /> {t("내 위치", "My location")}
             </button>
             {CHIPS.map((c) => {
               const on = st.chips.includes(c.id);
@@ -327,7 +393,7 @@ export default function Explorer({
                   className="chip"
                   onClick={() => update({ chips: on ? st.chips.filter((x) => x !== c.id) : [...st.chips, c.id] })}
                 >
-                  {c.label}
+                  {en ? c.en : c.label}
                 </button>
               );
             })}
@@ -340,22 +406,19 @@ export default function Explorer({
         </div>
         <div className="flex items-center justify-between gap-2">
           <p aria-live="polite" className="text-sm font-semibold">
-            <span className="text-base font-bold tabular-nums">{rows.length}</span>곳
+            <span className="text-base font-bold tabular-nums">{rows.length}</span>
+            {t("곳", rows.length === 1 ? " forest" : " forests")}
             {filtered && (
-              <button
-                type="button"
-                className="ml-2 text-sm font-medium text-muted underline underline-offset-2"
-                onClick={() => update({ ...DEFAULT, view: st.view })}
-              >
-                조건 초기화
+              <button type="button" className="ml-2 text-sm font-medium text-muted underline underline-offset-2" onClick={() => update({ ...DEFAULT, view: st.view })}>
+                {t("조건 초기화", "Reset")}
               </button>
             )}
           </p>
-          <div role="tablist" aria-label="보기 방식" className="seg">
+          <div role="tablist" aria-label={t("보기 방식", "View")} className="seg">
             {(["list", "map"] as const).map((v) => (
               <button key={v} type="button" role="tab" aria-selected={st.view === v} onClick={() => update({ view: v })}>
                 {v === "list" ? <List aria-hidden="true" className="size-4" /> : <MapIcon aria-hidden="true" className="size-4" />}
-                {v === "list" ? "목록" : "지도"}
+                {v === "list" ? t("목록", "List") : t("지도", "Map")}
               </button>
             ))}
           </div>
@@ -365,24 +428,14 @@ export default function Explorer({
       {st.view === "map" ? (
         <div className="card overflow-hidden">
           <div className="flex flex-wrap items-center gap-2 border-b border-line p-2">
-            <span className="label px-1">함께 보기</span>
-            <button
-              type="button"
-              className="chip"
-              aria-pressed={layers.nanum}
-              onClick={() => setLayers((l) => ({ ...l, nanum: !l.nanum }))}
-            >
+            <span className="label px-1">{t("함께 보기", "Also show")}</span>
+            <button type="button" className="chip" aria-pressed={layers.nanum} onClick={() => setLayers((l) => ({ ...l, nanum: !l.nanum }))}>
               <span aria-hidden="true" className="inline-block size-2.5 rounded-full bg-[#dd5b00] ring-2 ring-white" />
-              무장애나눔길
+              {t("무장애나눔길", "Barrier-free trails")}
             </button>
-            <button
-              type="button"
-              className="chip"
-              aria-pressed={layers.toilet}
-              onClick={() => setLayers((l) => ({ ...l, toilet: !l.toilet }))}
-            >
+            <button type="button" className="chip" aria-pressed={layers.toilet} onClick={() => setLayers((l) => ({ ...l, toilet: !l.toilet }))}>
               <span aria-hidden="true" className="inline-block size-2.5 rounded-full bg-[#0075de] ring-2 ring-white" />
-              장애인·어린이 화장실
+              {t("장애인·어린이 화장실", "Accessible and children's toilets")}
             </button>
           </div>
           <div className="relative">
@@ -397,36 +450,43 @@ export default function Explorer({
             />
             {selected && (
               <div className="absolute inset-x-2 bottom-2 z-[1000] sm:left-auto sm:w-96">
-                <ForestCard row={selected} onClose={() => setSelectedId(null)} />
+                <ForestCard row={selected} name={nm(selected.f)} lang={lang} onClose={() => setSelectedId(null)} />
               </div>
             )}
           </div>
-          <p className="p-3 text-sm text-muted">휴양림 표시를 누르면 요약이 열려요. 숫자 원은 누르면 확대돼요.</p>
+          <p className="p-3 text-sm text-muted">
+            {t("휴양림 표시를 누르면 요약이 열려요. 숫자 원은 누르면 확대돼요.", "Tap a forest pin for a summary. Tap a numbered circle to zoom in.")}
+          </p>
         </div>
       ) : (
         <>
           <ul className="grid gap-3 sm:grid-cols-2">
             {rows.slice(0, limit).map((r) => (
               <li key={r.f.id}>
-                <ForestCard row={r} />
+                <ForestCard row={r} name={nm(r.f)} lang={lang} />
               </li>
             ))}
           </ul>
           {rows.length === 0 && (
             <div className="card space-y-3 p-8 text-center">
-              <p className="font-semibold">조건에 맞는 휴양림이 없습니다</p>
+              <p className="font-semibold">{t("조건에 맞는 휴양림이 없습니다", "No forests match")}</p>
               <p className="text-sm text-muted">
-                {st.q ? `'${st.q}' 검색 결과가 없습니다. 휴양림 이름 일부나 시·군 이름(예: 가평, 인제)으로 찾아보세요.` : "선택한 조건을 몇 개 풀어 보세요."}
+                {st.q
+                  ? t(
+                      `'${st.q}' 검색 결과가 없습니다. 휴양림 이름 일부나 시·군 이름(예: 가평, 인제)으로 찾아보세요.`,
+                      `No results for '${st.q}'. Try part of a forest name or a city/county (e.g. Gapyeong, Inje).`,
+                    )
+                  : t("선택한 조건을 몇 개 풀어 보세요.", "Try removing some filters.")}
               </p>
               <button type="button" className="btn btn-outline" onClick={() => update({ ...DEFAULT, view: st.view })}>
-                조건 초기화
+                {t("조건 초기화", "Reset")}
               </button>
             </div>
           )}
           {rows.length > limit && (
             <div className="text-center">
               <button className="btn btn-outline" onClick={() => setLimit((l) => l + PAGE)}>
-                더 보기 ({rows.length - limit}곳 남음)
+                {t(`더 보기 (${rows.length - limit}곳 남음)`, `Show more (${rows.length - limit} left)`)}
               </button>
             </div>
           )}
@@ -438,76 +498,88 @@ export default function Explorer({
 
 type Fact = { icon: typeof Accessibility; text: string };
 
-function ForestCard({
-  row,
-  onClose,
-}: {
-  row: { f: ForestSummary; cov: { known: number; total: number }; dist: number | null };
-  onClose?: () => void;
-}) {
+function ForestCard({ row, name, lang, onClose }: { row: Row; name: string; lang: Lang; onClose?: () => void }) {
+  const { t } = useLang();
+  const km = (d: number) => kmOf(lang, d);
   const { f, cov, dist } = row;
   const book = bookingLink(f.homepage, f.national || f.ownership === "국유림");
+  // 휴양림 자체 정보
   const facts: Fact[] = [];
-  if (f.stay === true) facts.push({ icon: BedDouble, text: f.roomCount ? `숙박 객실 ${f.roomCount}실` : "숙박 가능" });
-  if (f.stay === false) facts.push({ icon: BedDouble, text: "당일 방문 (숙박 없음)" });
+  if (f.stay === true) facts.push({ icon: BedDouble, text: f.roomCount ? t(`숙박 객실 ${f.roomCount}실`, `${f.roomCount} rooms`) : t("숙박 가능", "Overnight stay") });
+  if (f.stay === false) facts.push({ icon: BedDouble, text: t("당일 방문 (숙박 없음)", "Day visit only (no lodging)") });
   if (f.disabledLotteryRooms)
-    facts.push({ icon: Accessibility, text: `장애인 추첨·우선예약 객실 ${f.disabledLotteryRooms}실` });
-  if (f.discount) facts.push({ icon: Percent, text: "장애인 이용료 할인" });
+    facts.push({ icon: Accessibility, text: t(`장애인 추첨·우선예약 객실 ${f.disabledLotteryRooms}실`, `${f.disabledLotteryRooms} disabled lottery/priority rooms`) });
+  if (f.discount) facts.push({ icon: Percent, text: t("장애인 이용료 할인", "Disability discount") });
+  if (f.asean) facts.push({ icon: Globe2, text: t("아세안 우선예약 객실", "ASEAN priority rooms") });
+  if (f.kidsForest) facts.push({ icon: Baby, text: t("유아숲체험원", "Children's forest") });
+  if (f.multiChildLotteryRooms) facts.push({ icon: Users, text: t(`다자녀 추첨 객실 ${f.multiChildLotteryRooms}실`, `${f.multiChildLotteryRooms} large-family lottery rooms`) });
+  if (f.lotteryRate) facts.push({ icon: Ticket, text: t(`주말 추첨 평균 경쟁률 ${f.lotteryRate}:1`, `Weekend lottery ${f.lotteryRate}:1`) });
+  // 주변 시설: 좌표 직선거리로만 연결 → 길로 이어지는지, 휴양림 안인지 모름
+  const near: Fact[] = [];
   if (f.nearestDisabledToilet)
-    facts.push({ icon: Toilet, text: `장애인 화장실 있는 공중화장실 ${km(f.nearestDisabledToilet.distKm)}` });
-  if (f.nanumNearest) facts.push({ icon: Route, text: `무장애나눔길 ${km(f.nanumNearest.distKm)}` });
-  if (f.kidsForest) facts.push({ icon: Baby, text: "유아숲체험원" });
-  if (f.multiChildLotteryRooms) facts.push({ icon: Users, text: `다자녀 추첨 객실 ${f.multiChildLotteryRooms}실` });
-  if (f.lotteryRate) facts.push({ icon: Ticket, text: `주말 추첨 평균 경쟁률 ${f.lotteryRate}:1` });
+    near.push({ icon: Toilet, text: t(`장애인 화장실 있는 공중화장실 ${km(f.nearestDisabledToilet.distKm)}`, `Public toilet with accessible stall ${km(f.nearestDisabledToilet.distKm)}`) });
+  if (f.nanumNearest) near.push({ icon: Route, text: t(`무장애나눔길 ${km(f.nanumNearest.distKm)}`, `Barrier-free trail ${km(f.nanumNearest.distKm)}`) });
+  if (f.busNearestKm != null) near.push({ icon: Bus, text: t(`버스정류장 ${km(f.busNearestKm)}`, `Bus stop ${km(f.busNearestKm)}`) });
+  const max = onClose ? 3 : 5;
 
   return (
     <article className="card card-hover flex h-full flex-col gap-3 p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="mb-1.5 flex flex-wrap gap-1">
-            {f.ownership && <span className={`tag ${f.ownership === "국유림" ? "tag-brand" : ""}`}>{f.ownership}</span>}
-            {f.closed && <span className="tag tag-no">휴장</span>}
+            {f.ownership && <span className={`tag ${f.ownership === "국유림" ? "tag-brand" : ""}`}>{fixedEn(lang, f.ownership)}</span>}
+            {f.closed && <span className="tag tag-no">{f.notOpen ? t("미운영", "Not operating") : t("휴장", "Closed")}</span>}
           </div>
           <h2 className="text-lg font-bold">
-            <Link href={`/forest/${f.id}`} className="underline-offset-4 hover:underline">
-              {f.name}
+            <Link href={href(lang, `/forest/${f.id}`)} className="underline-offset-4 hover:underline">
+              {name}
             </Link>
           </h2>
           <p className="text-sm text-muted">
-            {f.sido} {f.sigungu}
-            {dist != null && <> · 내 위치에서 {km(dist)}</>}
+            {regionOf(lang, f.sido, f.sigungu)}
+            {dist != null && <> · {t(`내 위치에서 직선 ${km(dist)}`, `${km(dist)} from you (straight line)`)}</>}
           </p>
         </div>
         {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn btn-ghost btn-sm -mr-1 -mt-1 px-2"
-            aria-label="요약 카드 닫기"
-          >
+          <button type="button" onClick={onClose} className="btn btn-ghost btn-sm -mr-1 -mt-1 px-2" aria-label={t("요약 카드 닫기", "Close summary")}>
             <X aria-hidden="true" className="size-5" />
           </button>
         )}
       </div>
       {facts.length > 0 && (
         <ul className="space-y-1 text-[0.9rem]">
-          {facts.slice(0, onClose ? 4 : 6).map((t) => (
-            <li key={t.text} className="flex items-center gap-2">
-              <t.icon aria-hidden="true" className="size-4 shrink-0 text-muted" strokeWidth={2} />
-              {t.text}
+          {facts.slice(0, max).map((x) => (
+            <li key={x.text} className="flex items-center gap-2">
+              <x.icon aria-hidden="true" className="size-4 shrink-0 text-muted" strokeWidth={2} />
+              {x.text}
             </li>
           ))}
         </ul>
       )}
+      {near.length > 0 && (
+        <div className="rounded-lg border border-dashed border-line-strong px-3 py-2">
+          <p className="text-xs font-semibold text-muted">
+            {t("주변 · 직선거리 (길·휴양림 안 여부 미확인)", "Nearby · straight line (route and location not verified)")}
+          </p>
+          <ul className="mt-1 space-y-0.5 text-[0.88rem]">
+            {near.slice(0, onClose ? 2 : 3).map((x) => (
+              <li key={x.text} className="flex items-center gap-2">
+                <x.icon aria-hidden="true" className="size-4 shrink-0 text-muted" strokeWidth={2} />
+                {x.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="mt-auto space-y-1 border-t border-line pt-3">
         <CoverageBar known={cov.known} total={cov.total} />
         <p className="text-xs text-muted">
-          데이터 {f.sourceCount}종 · 기준일 {f.refDate || "–"}
+          {t(`데이터 ${f.sourceCount}종 · 기준일 ${f.refDate || "–"}`, `${f.sourceCount} datasets · as of ${f.refDate || "–"}`)}
         </p>
       </div>
       <div className="flex gap-2">
-        <Link href={`/forest/${f.id}`} className="btn btn-primary flex-1">
-          자세히 보기 <ArrowRight aria-hidden="true" className="size-4" />
+        <Link href={href(lang, `/forest/${f.id}`)} className="btn btn-primary flex-1">
+          {t("자세히 보기", "Details")} <ArrowRight aria-hidden="true" className="size-4" />
         </Link>
         {book && (
           <a
@@ -515,18 +587,17 @@ function ForestCard({
             target="_blank"
             rel="noreferrer"
             className="btn btn-outline px-3"
-            aria-label={`${f.name} ${book.foresttrip ? "숲나들e에서 예약" : "홈페이지에서 예약 확인"} (새 창)`}
+            aria-label={t(
+              `${name} ${book.foresttrip ? "숲나들e에서 예약" : "홈페이지에서 예약 확인"} (새 창)`,
+              `${name}: ${book.foresttrip ? "book on Foresttrip" : "booking on website"} (new window)`,
+            )}
           >
-            <CalendarCheck aria-hidden="true" className="size-4" /> 예약
+            <CalendarCheck aria-hidden="true" className="size-4" /> {t("예약", "Book")}
           </a>
         )}
         {f.tel && (
-          <a
-            href={`tel:${f.tel.replace(/[^0-9+]/g, "")}`}
-            className="btn btn-outline px-3"
-            aria-label={`${f.name} 전화 ${f.tel}`}
-          >
-            <Phone aria-hidden="true" className="size-4" /> 전화
+          <a href={`tel:${f.tel.replace(/[^0-9+]/g, "")}`} className="btn btn-outline px-3" aria-label={t(`${name} 전화 ${f.tel}`, `Call ${name} ${f.tel}`)}>
+            <Phone aria-hidden="true" className="size-4" /> {t("전화", "Call")}
           </a>
         )}
       </div>

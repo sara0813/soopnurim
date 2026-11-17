@@ -11,7 +11,7 @@ function read(): Group[] {
   if (cache) return cache;
   try {
     const v = JSON.parse(localStorage.getItem(KEY) || "[]");
-    cache = Array.isArray(v) ? (v.filter((x) => ["wheelchair", "elder", "child"].includes(x)) as Group[]) : [];
+    cache = Array.isArray(v) ? (v.filter((x) => ["wheelchair", "elder", "child", "foreign"].includes(x)) as Group[]) : [];
   } catch {
     cache = [];
   }

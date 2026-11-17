@@ -15,6 +15,7 @@
       "item": "trailDetail",
       "kind": "review",
       "summary": "약 1km 무장애 데크로드가 있고 경사가 완만해 휠체어·유모차로 걸을 수 있다고 소개함 (폭·노면 수치는 없음)",
+      "summary_en": "Describes a barrier-free deck road of about 1 km with a gentle slope, usable by wheelchairs and strollers (no width or surface figures)",
       "title": "뉴스와 여행 기사 (국립청태산자연휴양림)",
       "url": "https://www.news-wa.com/amp/travel/tour-korea/2026/08/24/20260824500017",
       "date": "2026-08"
@@ -25,6 +26,7 @@
       "item": "trailDetail",
       "kind": "review",
       "summary": "5.8km 무장애 데크길 '더늠길'이 계단 없이 완만한 경사로 이어진다고 소개함",
+      "summary_en": "Describes the 5.8 km barrier-free deck trail 'Deoneumgil' as continuing on gentle slopes without stairs",
       "title": "위키트리 기사 (보성 제암산자연휴양림 무장애 숲길)",
       "url": "https://www.wikitree.co.kr/articles/1147694",
       "date": "2026-07"
@@ -33,6 +35,7 @@
       "item": "trailDetail",
       "kind": "review",
       "summary": "더늠길 전 구간이 데크라고 하면서도 능선을 넘나드는 산악 코스라고 설명함. 구간별 경사는 확인 필요",
+      "summary_en": "Says the whole Deoneumgil is decked but also calls it a mountain course crossing ridges; slope by section needs checking",
       "title": "경북매일 여행 기사",
       "url": "https://www.kbmaeil.com/article/20250622500217",
       "date": "2025-06"
@@ -43,6 +46,7 @@
       "item": "trailDetail",
       "kind": "review",
       "summary": "무장애 나눔길 데크가 턱·계단 없이 이어지고 폭이 넓다고 소개함",
+      "summary_en": "Describes the barrier-free trail deck as wide and continuous, without steps or stairs",
       "title": "인사이트 기사 (평지 숲길 4곳)",
       "url": "https://www.insight.co.kr/news/576308",
       "date": "2026-10"
@@ -51,6 +55,7 @@
       "item": "restArea",
       "kind": "review",
       "summary": "나눔길 중간중간 쉼터와 음수대가 있다고 소개함",
+      "summary_en": "Mentions rest areas and drinking fountains along the trail",
       "title": "인사이트 기사 (평지 숲길 4곳)",
       "url": "https://www.insight.co.kr/news/576308",
       "date": "2026-10"
@@ -61,6 +66,7 @@
       "item": "trailDetail",
       "kind": "review",
       "summary": "스카이웨이 전망대까지 계단 없이 지그재그 램프로 오를 수 있다고 소개함",
+      "summary_en": "Says the Skyway observatory can be reached by a zigzag ramp without stairs",
       "title": "인사이트 기사 (평지 숲길 4곳)",
       "url": "https://www.insight.co.kr/news/576308",
       "date": "2026-10"

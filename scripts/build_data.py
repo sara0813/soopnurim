@@ -31,7 +31,7 @@ SOURCES = {
         "license": LICENSE,
         "fields": "휴양림명, 시도명, 휴양림구분, 수용인원수, 입장료, 숙박가능여부, 주요시설명, 소재지도로명주소, 관리기관명, 휴양림전화번호, 홈페이지주소, 위도, 경도, 데이터기준일자",
         "processing": "명칭 정규화 + 2km 이내 중복 레코드 정리(최신 기준일 유지), 주요시설명에서 장애인화장실·무장애·유아숲 키워드 추출",
-        "usedIn": "목록·지도의 기본 정보, 상세 기본 정보, ③숙박 가능 여부, ④장애인 화장실 단서, ⑤유아숲체험원, ⑥운영 연락처",
+        "usedIn": "목록·지도의 기본 정보, 상세 기본 정보, ④숙박 가능 여부, ⑤장애인 화장실 단서, ⑥유아숲체험원, ⑦운영 연락처",
     },
     "nanum": {
         "name": "한국산림복지진흥원_무장애나눔길 조성정보",
@@ -42,7 +42,7 @@ SOURCES = {
         "license": LICENSE,
         "fields": "조성연도, 관리기관, 사업명, 주소, 위도, 경도, 조성길이(m)",
         "processing": "휴양림과 공통 ID가 없어 좌표 직선거리(3km 이내)로 연결",
-        "usedIn": "지도 나눔길 레이어·연결선, ⑤무장애나눔길 항목, 상세 '근처 무장애나눔길'",
+        "usedIn": "지도 나눔길 레이어·연결선, ⑥무장애나눔길 항목, 상세 '근처 무장애나눔길'",
     },
     "natfac": {
         "name": "산림청 국립자연휴양림관리소_국립자연휴양림 시설관련 정보",
@@ -53,7 +53,7 @@ SOURCES = {
         "license": LICENSE,
         "fields": "기관명, 상품구분, 상품명, 면적, 상품위치 위경도, 상품설명, 주소, 비수기·성수기 단가, 무료주차가능대수, 지역, 홈페이지주소",
         "processing": "휴양림명으로 표준데이터와 매칭(표준데이터에 없는 국립휴양림은 새로 추가), 객실 설명에서 장애인 우선예약·침대·온돌·다락/복층 키워드 추출",
-        "usedIn": "상세 '객실 목록', ③장애인 우선예약 객실·침대방·객실 안 계단, ①주차",
+        "usedIn": "상세 '객실 목록', ④장애인 우선예약 객실·침대방·객실 안 계단·입퇴실 시간, ②주차, ①입실 본인확인, ⑦바비큐·산불 예방",
     },
     "natpolicy": {
         "name": "산림청 국립자연휴양림관리소_국립자연휴양림 우선예약 및 추첨예약 정책",
@@ -64,7 +64,7 @@ SOURCES = {
         "license": LICENSE,
         "fields": "기관명, 정책구분, 정책명, 신청기간, 시설사용대상기간, 기관 위경도, 연락처, 홈페이지주소, 상품명, 객실인원수",
         "processing": "휴양림별·객실별로 장애인 추첨제, 다자녀 추첨제, 산림복지 바우처 우선예약 대상 여부 집계, 국립휴양림 대표 연락처·위치 보완",
-        "usedIn": "상세 '예약 방법'과 객실별 추첨제 표시, ③장애인 추첨 객실, ⑥운영 연락처, 목록 필터 '장애인 추첨제 객실'",
+        "usedIn": "상세 '예약 방법'과 객실별 추첨제 표시, ④장애인 추첨 객실, ①아세안 우선예약, ⑦운영 연락처, 목록 필터 '장애인 추첨제 객실'",
     },
     "natintro": {
         "name": "산림청 국립자연휴양림관리소_국립자연휴양림 홍보",
@@ -84,7 +84,7 @@ SOURCES = {
         "license": LICENSE,
         "fields": "기관명, 시설구분, 상품명, 전체배치도(이미지 주소), 상세배치도(이미지 주소)",
         "processing": "휴양림 전체배치도와 객실별 상세배치도 이미지 주소를 휴양림명·객실명으로 연결",
-        "usedIn": "상세 '배치도 보기', 객실 목록의 객실 위치도 링크, ①주차장→객실 동선 확인",
+        "usedIn": "상세 '배치도 보기', 객실 목록의 객실 위치도 링크, ②주차장→객실 동선 확인",
     },
     "natdiscount": {
         "name": "산림청 국립자연휴양림관리소_숲나들e 휴양림할인정책정보",
@@ -94,7 +94,7 @@ SOURCES = {
         "license": LICENSE,
         "fields": "휴양림명, 할인대상, 등급별칭(중증·경증), 비수기·성수기 평일·주말 시설할인율, 유효여부",
         "processing": "유효한 할인만, 장애인·국가보훈대상자·다자녀·지역주민 대상별로 정리",
-        "usedIn": "상세 '예약 방법 > 할인', ③장애인 할인 항목",
+        "usedIn": "상세 '예약 방법 > 할인', ④장애인 할인 항목",
     },
     "natcompetition": {
         "name": "산림청 국립자연휴양림관리소_주말추첨경쟁률",
@@ -144,7 +144,7 @@ SOURCES = {
         "license": LICENSE,
         "fields": "점검 항목, 기관명, 결과(예·아니오·해당없음), 점검일자",
         "processing": "48개 항목 중 AED·계단 미끄럼방지·대피 장소·어린이 놀이시설·물놀이·뱀·독충·숲길 이정표 7개 항목의 휴양림별 최신 결과",
-        "usedIn": "상세 '운영기관 안전점검', ②계단, ⑥응급 대비, 유아 안전",
+        "usedIn": "상세 '운영기관 안전점검', ③계단, ⑦응급 대비, 유아 안전",
     },
     "kidsforest": {
         "name": "산림청_유아숲체험원 현황",
@@ -154,7 +154,7 @@ SOURCES = {
         "license": LICENSE,
         "fields": "시설명, 주소, 운영기간, 전화번호, 참여방법",
         "processing": "좌표가 없어, 시설명에 휴양림명이 들어 있으면 '휴양림 안', 아니면 같은 시·군·구로 연결",
-        "usedIn": "⑤유아숲체험원, 상세 '주변 시설'",
+        "usedIn": "⑥유아숲체험원, 상세 '주변 시설'",
     },
     "healing": {
         "name": "산림청_치유의숲 현황",
@@ -174,7 +174,7 @@ SOURCES = {
         "license": LICENSE,
         "fields": "화장실명, 소재지주소, 남·여 장애인용 대변기수, 남성 장애인용 소변기수, 남·여 어린이용 대변기수, 기저귀교환대장소, 개방시간, 위도, 경도, 데이터기준일자",
         "processing": "휴양림 좌표 1.5km 이내 공중화장실을 거리순으로 연결",
-        "usedIn": "상세 '주변 공중화장실', ④장애인 화장실·어린이 화장실, 지도 화장실 레이어, 목록 필터 '근처 장애인 화장실'",
+        "usedIn": "상세 '주변 공중화장실', ⑤장애인 화장실·어린이 화장실, 지도 화장실 레이어, 목록 필터 '근처 장애인 화장실'",
     },
     "jeju": {
         "name": "제주특별자치도_무장애여행정보 (붉은오름·서귀포자연휴양림)",
@@ -185,9 +185,101 @@ SOURCES = {
         "license": LICENSE,
         "fields": "위도, 경도, 장소명칭, 장소상세정보, 무장애관광정보",
         "processing": "휴양림명으로 연결, '특이사항없음' 제외",
-        "usedIn": "상세 '현장조사 기록', ②진입로 단차·경사, ④장애인 화장실, ⑤숲길 폭·경사·쉼터",
+        "usedIn": "상세 '현장조사 기록', ③진입로 단차·경사, ⑤장애인 화장실, ⑥숲길 폭·경사·쉼터",
+    },
+    "busstop": {
+        "name": "국토교통부_전국 버스정류장 위치정보",
+        "org": "국토교통부 (TAGO 연계 지자체)",
+        "url": "https://www.data.go.kr/data/15067528/fileData.do",
+        "kind": "교통 · 파일데이터 (매시업)",
+        "license": LICENSE,
+        "fields": "정류장번호, 정류장명, 위도, 경도, 정보수집일, 도시명",
+        "processing": "휴양림 좌표에서 직선거리 3km 이내 정류장을 가까운 순으로 연결. TAGO에 연계되지 않은 일부 시·군은 데이터에 없음",
+        "usedIn": "②대중교통(가장 가까운 정류장), 외국인 이용자 여정",
+    },
+    # 공공데이터포털 데이터셋이 아니라 기관 누리집의 공식 목록. '공공데이터 N종' 집계에서는 뺀다(notPortal)
+    "kfslist": {
+        "name": "산림청 자연휴양림 찾기 목록 (국립·지자체·개인)",
+        "org": "산림청",
+        "url": "https://www.forest.go.kr/kfsweb/kfi/kfs/foreston/main/contents/CmpngInfo/selectCmpngInfoList.do?restTpcd=01&restMngmeMnbdCd=002&mn=AR02_01_01_04",
+        "kind": "산림 · 기관 누리집 공식 목록",
+        "license": "산림청 누리집 공개 정보",
+        "fields": "휴양림명, 운영 구분(국립·지자체·개인), 주소, 전화번호, 누리집",
+        "processing": "전국휴양림표준데이터·국립자연휴양림 시설정보와 이름·도로명주소로 대조해, 어디에도 없는 휴양림만 목록에 추가. 좌표는 주소를 OpenStreetMap(Nominatim)으로 검색한 값이라 오차가 있을 수 있음",
+        "usedIn": "휴양림 목록·지도(표준데이터에서 빠진 휴양림 보완), 연락처",
+        "notPortal": True,
+    },
+    "ftlist": {
+        "name": "숲나들e 휴양림 목록",
+        "org": "산림청 국립자연휴양림관리소 (숲나들e)",
+        "url": "https://www.foresttrip.go.kr/main.do?hmpgId=FRIP",
+        "kind": "산림 · 기관 누리집 공식 목록",
+        "license": "숲나들e 누리집 공개 정보",
+        "fields": "휴양림명, 휴양림 누리집 주소·전화",
+        "processing": "산림청 목록에도 없는 휴양림 중 숲나들e에서 예약을 받는 곳(이름에 '자연휴양림'이 있는 곳)만 추가. 좌표는 OpenStreetMap(Nominatim) 주소 검색",
+        "usedIn": "휴양림 목록·지도(신규 개장 휴양림 보완), 연락처",
+        "notPortal": True,
     },
 }
+
+# 영어 화면용 출처 설명 (이름은 원문 병기)
+SOURCES_EN = {
+    "std": ("National Recreation Forest Standard Data", "Korea Forest Service and local governments (public data standard)", "Forest standard data",
+            "Name, type, address, coordinates, phone, website, overnight stay, capacity, main facilities, reference date",
+            "Duplicates (same name within 2 km) merged, keeping the newest record", "Forest list, map, basic info"),
+    "nanum": ("Barrier-free Trail (Nanumgil) Status", "Korea Forest Service", "Forest file data",
+              "Trail name, year built, operator, address, length",
+              "Addresses geocoded; trails within 3 km of a forest are linked", "Step 6 barrier-free trail, map trail layer"),
+    "natfac": ("National Recreation Forest Facility Information", "National Forest Recreation Service", "Forest file data",
+               "Forest, product type, room name, area, coordinates, description, prices, parking",
+               "Keywords (bed, ondol, loft, priority room) and check-in/out times extracted from room descriptions",
+               "Room list, step 4 rooms and check-in/out times, step 2 parking, step 1 ID at check-in, step 7 barbecue rules"),
+    "natpolicy": ("National Recreation Forest Priority and Lottery Booking Policy", "National Forest Recreation Service", "Forest file data",
+                  "Forest, policy name, application period, stay period, room, phone, coordinates",
+                  "Lottery rooms and months per forest; ASEAN priority rooms and windows for ASEAN Natural Recreation Forest",
+                  "Lottery booking, step 1 ASEAN priority booking, step 7 phone numbers"),
+    "natintro": ("National Recreation Forest Introduction", "National Forest Recreation Service", "Forest file data",
+                 "Description, year built, maximum capacity, operating hours", "Linked by forest name", "Forest introduction"),
+    "natlayout": ("National Recreation Forest Layout Maps", "National Forest Recreation Service", "Forest file data",
+                  "Site map and room layout images", "Linked by forest and room name", "Site map, room layouts"),
+    "natdiscount": ("National Recreation Forest Discounts", "National Forest Recreation Service", "Forest file data",
+                    "Discount target and rate by season", "Grouped by target", "Discounts"),
+    "natcompetition": ("National Recreation Forest Lottery Competition Rates", "National Forest Recreation Service", "Forest file data",
+                       "Monthly lottery competition rate", "Average and peak month per forest", "Booking competition"),
+    "natoccupancy": ("National Recreation Forest Occupancy Rates", "National Forest Recreation Service", "Forest file data",
+                     "Weekday, weekend and total occupancy", "Latest year per forest", "Occupancy"),
+    "natworks": ("National Recreation Forest Maintenance Works", "National Forest Recreation Service", "Forest file data",
+                 "Year, work title, scope, room, completion date", "Accessibility-related works flagged", "Maintenance history"),
+    "natclosure": ("National Recreation Forest Closure Records", "National Forest Recreation Service", "Forest file data",
+                   "Closure period and reason", "Past closures per forest", "Past closures"),
+    "natsafety": ("National Recreation Forest Safety Inspections", "National Forest Recreation Service", "Forest file data",
+                  "Inspection item, result, date", "Latest result per item", "Step 7 safety"),
+    "kidsforest": ("Children's Forest Experience Centers", "Korea Forest Service", "Forest file data",
+                   "Name, address, phone, operator", "Linked inside the forest or in the same city/county", "Nearby places"),
+    "healing": ("Healing Forest Status", "Korea Forest Service", "Forest file data",
+                "Region, name, address, phone, website", "Linked inside the forest or in the same city/county", "Nearby places"),
+    "toilet": ("National Public Toilet Standard Data", "Ministry of the Interior and Safety and local governments", "Living standard data (mashup)",
+               "Name, address, accessible and children's toilets, diaper station, hours, coordinates",
+               "Public toilets within 1.5 km of a forest, nearest first", "Step 5 toilets, map toilet layer"),
+    "jeju": ("Jeju Barrier-free Travel Information", "Jeju Special Self-Governing Province", "Tourism file data (field survey)",
+             "Coordinates, place, details, barrier-free notes", "Linked by forest name", "Field survey notes"),
+    "busstop": ("Nationwide Bus Stop Locations", "Ministry of Land, Infrastructure and Transport (TAGO cities)", "Transport file data (mashup)",
+                "Stop ID, stop name, coordinates, collection date, city",
+                "Stops within 3 km (straight line) of a forest, nearest first. Some cities not linked to TAGO are missing",
+                "Step 2 public transport, foreign visitor journey"),
+    "kfslist": ("Korea Forest Service list of recreation forests (national, local, private)", "Korea Forest Service",
+                "Forest sector · official list on an agency website",
+                "Forest name, operator type, address, phone, website",
+                "Compared with the standard data and national facility data by name and road address; only forests missing from both are added. Coordinates come from an OpenStreetMap (Nominatim) address search and may be off",
+                "Forest list and map (filling gaps in the standard data), contact"),
+    "ftlist": ("Foresttrip forest list", "National Forest Recreation Service (Foresttrip)",
+               "Forest sector · official list on an agency website",
+               "Forest name, address and phone from each forest's Foresttrip page",
+               "Adds forests that take bookings on Foresttrip but are in neither the KFS list nor the standard data. Coordinates from OpenStreetMap (Nominatim)",
+               "Forest list and map (newly opened forests), contact"),
+}
+for _k, (_n, _o, _kd, _fd, _pr, _u) in SOURCES_EN.items():
+    SOURCES[_k].update({"name_en": _n, "org_en": _o, "kind_en": _kd, "fields_en": _fd, "processing_en": _pr, "usedIn_en": _u})
 
 SIDO_FULL = {
     "서울": "서울특별시", "부산": "부산광역시", "대구": "대구광역시", "인천": "인천광역시", "광주": "전남광주통합특별시",
@@ -255,8 +347,12 @@ report = []  # 분석 리포트 라인
 improve_log = []  # 개선 의견 로그
 
 
-def log_issue(dataset, problem, impact, proposal):
-    improve_log.append({"dataset": dataset, "problem": problem, "impact": impact, "proposal": proposal})
+def log_issue(dataset, problem, impact, proposal, en=None):
+    """en = (dataset, problem, impact, proposal) 영어 화면용"""
+    it = {"dataset": dataset, "problem": problem, "impact": impact, "proposal": proposal}
+    if en:
+        it.update(dict(zip(("dataset_en", "problem_en", "impact_en", "proposal_en"), en)))
+    improve_log.append(it)
 
 
 # ---------------------------------------------------------------- 2. 표준데이터 결측률
@@ -277,6 +373,10 @@ log_issue(
     "표준 필드 17개 중 무장애(문턱·경사·장애인 객실·화장실 등) 관련 필드가 없음",
     "보행약자가 여정 단계별로 이용 가능 여부를 판단할 근거가 없음",
     "무장애 상세 필드 추가(제안 1)",
+    en=("National Recreation Forest Standard Data",
+        "None of the 17 standard fields covers accessibility (thresholds, slopes, accessible rooms, toilets)",
+        "People with limited mobility have no evidence to judge each step of a trip",
+        "Add detailed barrier-free fields (proposal 1)"),
 )
 
 # 기준일 분포
@@ -355,6 +455,10 @@ log_issue(
     f"같은 휴양림이 시·군과 시·도 등 여러 제공기관에서 중복 등록됨 ({len(dups)}곳, {sum(len(g) - 1 for g in dups)}건)",
     "목록·지도에 같은 숲이 두 번 나타나고, 기준일이 다른 정보가 서로 충돌",
     "휴양림 고유 ID(지정번호) 필드 추가, 제공기관 간 중복 등록 정리",
+    en=("National Recreation Forest Standard Data",
+        f"The same forest is registered by several providers, e.g. both city and province ({len(dups)} forests, {sum(len(g) - 1 for g in dups)} records)",
+        "The same forest appears twice in lists and maps, with conflicting dates",
+        "Add a unique forest ID and clean up duplicates between providers"),
 )
 STD_UNIQUE = len(forests)
 
@@ -570,6 +674,122 @@ for k, pol in policy.items():
         policy_only.append(pol["name"])
 report.append(f"- 예약정책 데이터에만 있고 연결하지 못한 휴양림: {', '.join(policy_only) or '없음'}\n")
 
+# ---------------------------------------------------------------- 1-5. 공식 목록과 대조: 표준데이터에서 빠진 휴양림 보완
+# 전국휴양림표준데이터는 지자체가 각자 등록하므로 등록하지 않은 휴양림(예: 서울 노원구 수락휴)이 빠진다.
+# 산림청 '자연휴양림 찾기' 전체 목록·숲나들e 목록과 대조해 어디에도 없는 곳만 추가한다 (scripts/fetch_forest_list.py)
+OFFICIAL = os.path.join(RAW, "extra", "forest_list_official.json")
+FOREST_GEO = os.path.join(RAW, "extra", "forest_geocode.json")
+FOREST_UNMATCHED = os.path.join(RAW, "extra", "forest_list_unmatched.json")
+official = json.load(open(OFFICIAL, encoding="utf-8"))
+geo = json.load(open(FOREST_GEO, encoding="utf-8")) if os.path.exists(FOREST_GEO) else {}
+for _k in ("kfslist", "ftlist"):
+    SOURCES[_k]["refDate"] = official["refDate"]
+
+
+def name_keys(n):
+    """정규화한 이름과 괄호 안 별칭"""
+    keys = {norm_name(n)} | {norm_name(x) for x in re.findall(r"\((.*?)\)", n or "")}
+    return {k.replace("산림휴양관", "") for k in keys if len(k) >= 2}
+
+
+def road_key(addr):
+    """도로명+건물번호 (예: 대둔산로6). 이름이 달라도 같은 곳을 찾기 위함"""
+    m = re.search(r"(\S+(?:로|길))\s*(\d+(?:-\d+)?)", addr or "")
+    return m.group(1) + m.group(2) if m else ""
+
+
+def match_official(name, addr):
+    sido, sgg = region_of(addr)
+    keys = name_keys(name)
+    same = [f for f in forests if name_keys(f["name"]) & keys]
+    if same:
+        loc = [f for f in same if sgg and sgg in (f.get("address") or "")]
+        return (loc or same)[0], "이름"
+    rk = road_key(addr)
+    if rk:
+        hit = next((f for f in forests if road_key(f.get("address")) == rk), None)
+        if hit:
+            return hit, "주소"
+    # 이름 일부가 겹치고 같은 시·군·구일 때만 같은 곳으로 본다 (예: 금산 ↔ 금산산림문화타운 오인 방지)
+    # 둘 다 도로명이 있는데 서로 다르면 다른 곳 (예: 국립 금산자연휴양림 거북바위길 ↔ 금산산림문화타운 느티골길)
+    road = re.sub(r"\d.*$", "", rk)
+    for f in forests:
+        fk = name_keys(f["name"])
+        froad = re.sub(r"\d.*$", "", road_key(f.get("address")))
+        if road and froad and road != froad:
+            continue
+        if sgg and sgg in (f.get("address") or "") and any(a in b or b in a for a in fk for b in keys):
+            return f, "이름 일부+시군구"
+    return None, ""
+
+
+list_added, list_matched, unmatched_geo, list_loose = [], Counter(), [], []
+# 산림청 목록의 표기 오류·띄어쓰기만 화면용으로 다듬는다 (좌표 캐시·대조는 원래 이름 기준)
+LIST_NAME_FIX = {
+    "소노벨비발디파(두릉산자연휴양림)": "두릉산자연휴양림(소노벨 비발디파크)",
+    "집다리골자연휴양림(강원숲체험장포함)": "집다리골자연휴양림(강원숲체험장 포함)",
+}
+for src, entries in (("kfslist", official["kfs"]), ("ftlist", official["foresttrip"])):
+    for e in entries:
+        if src == "ftlist" and ("자연휴양림" not in e["name"] or not e.get("address")):
+            continue  # 숲나들e에만 있는 곳은 '자연휴양림'이고 주소가 확인된 곳만
+        hit, how = match_official(e["name"], e["address"])
+        if hit:
+            list_matched[how] += 1
+            if how != "이름":
+                list_loose.append(f"{e['name']} → {hit['name']} ({how})")
+            if src == "kfslist" and not hit.get("tel") and e.get("tel") and re.search(r"\d", e["tel"]):
+                hit["tel"], hit["telSource"] = e["tel"], "kfslist"
+                hit["sources"].append("kfslist")
+            continue
+        g = geo.get(e["name"])
+        not_open = e.get("tel") == "미운영"
+        forests.append({
+            "id": f"k{len(list_added):03d}",
+            "name": LIST_NAME_FIX.get(e["name"], e["name"]),
+            "sido": "",
+            "ownership": e.get("ownership") or "공유림",
+            # 산림청 목록 주소에 시·군이 빠진 곳 보정
+            "address": e["address"].replace("대구광역시 가창면", "대구광역시 달성군 가창면"),
+            "tel": e["tel"] if re.search(r"\d", e.get("tel") or "") else "",
+            "telSource": src,
+            "homepage": e.get("homepage") or (f"https://www.foresttrip.go.kr/indvz/main.do?hmpgId={e['insttId']}" if e.get("insttId") else ""),
+            "lat": g["lat"] if g else None,
+            "lng": g["lng"] if g else None,
+            "geoSource": g.get("source", "osm") if g else None,
+            "stay": None,
+            "capacity": None,
+            "areaM2": None,
+            "admissionFee": "",
+            "facilities": [],
+            "institution": "",
+            "refDate": official["refDate"],
+            "sources": [src],
+            "listOnly": True,
+            "notOpen": not_open,
+        })
+        list_added.append(e["name"])
+        if not g:
+            unmatched_geo.append({"name": e["name"], "address": e["address"], "homepage": forests[-1]["homepage"]})
+json.dump(unmatched_geo, open(FOREST_UNMATCHED, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+report.append("## 1-5. 공식 목록과 대조\n")
+report.append(f"- 산림청 자연휴양림 목록 {len(official['kfs'])}곳, 숲나들e 목록 {len(official['foresttrip'])}곳 ({official['refDate']} 수집)")
+report.append(f"- 기존 데이터와 연결: " + ", ".join(f"{k} {v}곳" for k, v in list_matched.items()))
+report.append(f"- **표준데이터·국립 시설정보 어디에도 없어 추가: {len(list_added)}곳** – " + ", ".join(list_added))
+report.append("- 이름이 달라 주소·시군구로 연결한 곳: " + "; ".join(list_loose))
+report.append(f"- 좌표를 찾지 못한 곳: {', '.join(x['name'] for x in unmatched_geo) or '없음'}\n")
+print("official list added:", len(list_added), list_added, "no coords:", len(unmatched_geo))
+log_issue(
+    "전국휴양림표준데이터 ↔ 산림청 자연휴양림 목록",
+    f"산림청 누리집의 자연휴양림 {len(official['kfs'])}곳과 대조하니, 표준데이터와 국립 시설정보 어디에도 없는 휴양림이 {len(list_added)}곳 (서울 노원구 수락휴 등)",
+    "표준데이터만 쓰는 서비스에서는 서울처럼 휴양림이 있는 지역이 '0곳'으로 보이고, 새로 연 휴양림을 찾을 수 없음",
+    "산림청 지정 자연휴양림 전체를 표준데이터에 등록하도록 제공 의무화, 지정·개장·폐장 날짜 필드 추가",
+    en=("National Recreation Forest Standard Data ↔ Korea Forest Service forest list",
+        f"Compared with the {len(official['kfs'])} recreation forests on the Korea Forest Service website, {len(list_added)} are in neither the standard data nor the national facility data (e.g. Surakhyu in Nowon-gu, Seoul)",
+        "Services using only the standard data show regions such as Seoul as having no forests, and newly opened forests cannot be found",
+        "Require every designated recreation forest to be registered in the standard data, and add designation, opening and closing dates"),
+)
+
 report.append("## 2. 국립자연휴양림 시설관련 정보 결합\n")
 report.append(f"- 상품 {len(nat_rows)}건 (숙박 {sum(p['상품구분']=='숙박' for p in nat_rows)}, "
               f"야영 {sum(p['상품구분']=='야영' for p in nat_rows)}, 부대시설 {sum(p['상품구분']=='부대시설' for p in nat_rows)}), "
@@ -583,6 +803,10 @@ log_issue(
     f"국립자연휴양림 {len(nat_by_forest)}곳 중 {len(nat_added)}곳이 전국휴양림표준데이터에 없음",
     "표준데이터만 쓰면 이용자가 많은 국립휴양림 상당수가 검색되지 않음",
     "국립자연휴양림관리소 운영 휴양림을 표준데이터에 포함, 두 데이터에 공통 휴양림 ID 부여",
+    en=("Standard Data ↔ National Recreation Forest Facility Information",
+        f"{len(nat_added)} of {len(nat_by_forest)} national forests are missing from the standard data",
+        "Using only the standard data, many popular national forests cannot be found",
+        "Include all national forests in the standard data and give both datasets a shared forest ID"),
 )
 
 log_issue(
@@ -590,6 +814,10 @@ log_issue(
     "전화번호 필드가 없고, 주차는 객실(상품)당 대수만 있어 전체 주차장·장애인 주차구역 규모를 알 수 없음",
     f"표준데이터에 없는 국립휴양림 {len(nat_added)}곳의 연락처를 찾으려면 별도 데이터셋(우선예약·추첨예약 정책)을 결합해야 함",
     "시설정보 데이터에 휴양림 대표 전화번호, 전체·장애인 주차면 수 필드 추가",
+    en=("National Recreation Forest Facility Information",
+        "No phone field, and parking is only given per room, so total and accessible parking are unknown",
+        f"Finding phone numbers for the {len(nat_added)} national forests missing from the standard data needs another dataset (booking policy)",
+        "Add the forest's main phone number and total/accessible parking spaces"),
 )
 
 rooms_all = [p for p in nat_rows if p["상품구분"] == "숙박"]
@@ -619,6 +847,10 @@ log_issue(
     "객실 무장애 정보가 '상품설명' 자유서술에만 있고, 문턱·안전손잡이·유모차 관련 언급 객실은 0실",
     "텍스트 분석으로도 객실 출입·욕실 안전 여부를 알 수 없음",
     "객실 단위 구조화 필드(출입구 단차, 문 폭, 침대/온돌, 욕실 손잡이) 추가",
+    en=("National Recreation Forest Facility Information",
+        "Room accessibility is only in free-text descriptions; no room mentions thresholds, grab bars or strollers",
+        "Even text analysis cannot tell whether rooms and bathrooms are accessible",
+        "Add structured room fields (entrance step, door width, bed/ondol, bathroom grab bars)"),
 )
 
 # ---------------------------------------------------------------- 5. 무장애나눔길 좌표 매칭
@@ -668,6 +900,10 @@ log_issue(
     "두 데이터 간 공통 ID가 없어 좌표 직선거리로만 연결 가능",
     "휴양림 안 나눔길인지 인근 공원 나눔길인지 구분 불가",
     "무장애나눔길 데이터에 '연계 휴양림 ID' 필드 추가(제안 2)",
+    en=("Barrier-free Trail Status ↔ Standard Data",
+        "No shared ID, so trails can only be linked by straight-line distance",
+        "Cannot tell a trail inside the forest from one in a nearby park",
+        "Add a 'linked forest ID' field to the trail data (proposal 2)"),
 )
 nanum_missing = {
     k: sum(not (r.get(k) or "").strip() for r in nanum_rows) for k in nanum_rows[0].keys()
@@ -681,6 +917,10 @@ log_issue(
     "필드가 연번·연도·기관·사업명·주소·좌표·길이 8개뿐, 경사도·노면·폭 없음",
     "'무장애'라는 이름만으로 실제 휠체어 주행 가능 여부 판단 불가",
     "평균·최대 경사, 노면 재질, 유효 폭, 쉼터 간격, 화장실 유무 필드 추가(제안 2)",
+    en=("Barrier-free Trail Status",
+        "Only 8 fields (number, year, agency, project, address, coordinates, length); no slope, surface or width",
+        "The 'barrier-free' name alone cannot tell whether a wheelchair can actually use the trail",
+        "Add average/max slope, surface, usable width, rest-area spacing and toilet fields (proposal 2)"),
 )
 
 # ---------------------------------------------------------------- 6. 제주 무장애여행정보(현장조사) 결합
@@ -764,12 +1004,37 @@ log_issue(
     f"'기저귀교환대장소' 필드가 전국 {len(toilet_raw['rows']):,}건 중 {diaper_filled}건만 채워짐, 좌표 없는 화장실 {len(toilet_raw['rows']) - len(toilets):,}건",
     "유아 동반 가족이 휴양림 주변 기저귀 교환 시설을 공공데이터로 찾을 수 없음",
     "기저귀교환대 유무(Y/N) 필드 의무 입력, 휴양림 내 화장실은 휴양림 ID 연계",
+    en=("National Public Toilet Standard Data",
+        f"The diaper station field is filled for only {diaper_filled} of {len(toilet_raw['rows']):,} toilets; {len(toilet_raw['rows']) - len(toilets):,} toilets have no coordinates",
+        "Families with infants cannot find diaper stations near forests from public data",
+        "Make a diaper station Y/N field mandatory and link toilets inside forests to the forest ID"),
 )
 
 # ---------------------------------------------------------------- 6-3. 지역 정규화·휴장 표시
+# 숲나들e 하위 도메인 홈페이지는 접속하면 오류 화면으로 가므로 통합 주소로 바꾼다 (scripts/fetch_forest_list.py 참고)
+FT_SUB = {k: v for k, v in (official.get("subdomains") or {}).items() if v}
+fixed_home = []
+for f in forests:
+    m = re.search(r"([a-z0-9-]+)\.foresttrip\.go\.kr", f.get("homepage") or "")
+    if m and m.group(1) in FT_SUB:
+        f["homepage"] = f"https://www.foresttrip.go.kr/indvz/main.do?hmpgId={FT_SUB[m.group(1)]}"
+        fixed_home.append(f["name"])
+report.append(f"- 숲나들e 하위 도메인 홈페이지(접속 시 오류)를 통합 주소로 바꾼 곳: {len(fixed_home)}곳 – {', '.join(fixed_home)}\n")
+if fixed_home:
+    log_issue(
+        "전국휴양림표준데이터 '홈페이지주소'",
+        f"숲나들e 개별 하위 도메인 주소(예: godaesan.foresttrip.go.kr) {len(fixed_home)}곳이 접속하면 '요청하신 페이지를 찾을수 없습니다'로 이어짐",
+        "예약하려고 홈페이지 링크를 누른 이용자가 오류 화면을 보고 예약 경로를 잃음",
+        "홈페이지주소를 숲나들e 통합 주소(www.foresttrip.go.kr/indvz/main.do?hmpgId=…)로 갱신, 링크 유효성 정기 점검",
+        en=("National Recreation Forest Standard Data 'homepage'",
+            f"{len(fixed_home)} Foresttrip sub-domain addresses (e.g. godaesan.foresttrip.go.kr) lead to a 'page not found' error",
+            "Visitors who click the website link to book end up on an error page",
+            "Update to the unified Foresttrip address (www.foresttrip.go.kr/indvz/main.do?hmpgId=…) and check links regularly"),
+    )
+
 for f in forests:
     f["sido"], f["sigungu"] = region_of(f["address"], f["sido"])
-    f["closed"] = "휴장" in f["name"]
+    f["closed"] = "휴장" in f["name"] or bool(f.get("notOpen"))
 
 # ---------------------------------------------------------------- 6-4. 산림청 국립자연휴양림관리소 추가 데이터
 # 공통 ID가 없어 휴양림명(정규화)으로 연결. 국립은 시설정보의 기관명, 그 외는 휴양림명 기준.
@@ -1027,19 +1292,179 @@ log_issue(
     "데이터셋마다 휴양림 표기('속리산 자연휴양림'·'속리산 말티재자연휴양림')와 기관아이디 형식('101'·'0101'·'ID02030103')이 달라 결합 시 별칭표가 필요",
     "같은 휴양림의 할인·배치도·안전점검 정보를 자동으로 모으기 어렵고, 누락이 생겨도 알아차리기 어려움",
     "국립자연휴양림관리소 데이터 전체에 같은 형식의 휴양림 ID 사용, 전국휴양림표준데이터에도 같은 ID 부여",
+    en=("National Forest Recreation Service data in general",
+        "Forest names and agency ID formats ('101', '0101', 'ID02030103') differ between datasets, so joining needs an alias table",
+        "Discounts, maps and safety checks for the same forest are hard to combine, and gaps go unnoticed",
+        "Use one forest ID format across all datasets and give the standard data the same ID"),
 )
 log_issue(
     "국립자연휴양림 월별 안전점검표",
     "점검 항목에 계단 미끄럼방지·AED는 있으나 경사로·장애인 객실·장애인 화장실 상태 점검 항목은 없음",
     "보행약자가 가장 궁금한 시설의 최근 상태를 공공데이터로 확인할 수 없음",
     "안전점검표에 무장애 시설(경사로·장애인 객실 출입문·장애인 화장실) 점검 항목 추가",
+    en=("National Recreation Forest Monthly Safety Checks",
+        "Checks cover non-slip stairs and AEDs but not ramps, accessible rooms or accessible toilets",
+        "The current state of the facilities people with limited mobility care about most is not in public data",
+        "Add barrier-free items (ramps, accessible room doors, accessible toilets) to the checklist"),
 )
 log_issue(
     "유아숲체험원 현황 / 치유의숲 현황",
     "주소만 있고 위경도·휴양림 ID가 없음",
     "휴양림 안에 있는 시설인지 이름 일부와 시·군·구로만 추정 가능",
     "위경도와 소재 휴양림(산림휴양시설) ID 필드 추가",
+    en=("Children's Forest Centers / Healing Forests",
+        "Only addresses; no coordinates or forest ID",
+        "Whether a place is inside a forest can only be guessed from its name and city/county",
+        "Add coordinates and the ID of the forest it belongs to"),
 )
+
+# ---------------------------------------------------------------- 6-5. 외국인 이용자: 대중교통·이용수칙·아세안 우선예약
+# (1) 버스정류장: 원본(22MB)이 있으면 휴양림 5km 이내만 추려 busstop_near.json으로 저장, 없으면 저장본 사용
+BUS_CSV = os.path.join(RAW, "extra", "15067528.csv")
+BUS_NEAR = os.path.join(RAW, "extra", "busstop_near.json")
+if os.path.exists(BUS_CSV):
+    raw_stops = []
+    for r in csv.DictReader(open(BUS_CSV, encoding="cp949", newline="")):
+        la, lo = fnum(r["위도"]), fnum(r["경도"])
+        if la and lo:
+            raw_stops.append((la, lo, r["정류장명"].strip(), r["도시명"].strip(), r["정보수집일"].strip()))
+    bus_total = len(raw_stops)
+    near = {}
+    for la, lo, nm, city, d in raw_stops:
+        for f in forests:
+            if f["lat"] and abs(f["lat"] - la) < 0.05 and abs(f["lng"] - lo) < 0.06 and haversine(f["lat"], f["lng"], la, lo) <= 5:
+                near[(round(la, 6), round(lo, 6), nm)] = {"name": nm, "lat": round(la, 6), "lng": round(lo, 6), "city": city, "date": d}
+                break
+    json.dump({"total": bus_total, "refDate": max(x[4] for x in raw_stops), "stops": list(near.values())},
+              open(BUS_NEAR, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+bus = json.load(open(BUS_NEAR, encoding="utf-8"))
+SOURCES["busstop"]["refDate"] = bus["refDate"]
+EXTRA_ROWS["15067528"] = bus["total"]
+bus_hist = Counter()
+for f in forests:
+    if not f["lat"]:
+        continue
+    near = sorted(
+        ({**b, "distKm": round(haversine(f["lat"], f["lng"], b["lat"], b["lng"]), 2)} for b in bus["stops"]),
+        key=lambda b: b["distKm"],
+    )
+    near = [b for b in near if b["distKm"] <= 3]
+    # 같은 이름(길 건너편 정류장) 중복 제거
+    seen, stops = set(), []
+    for b in near:
+        if b["name"] not in seen:
+            seen.add(b["name"])
+            stops.append({k: b[k] for k in ("name", "distKm", "city", "lat", "lng")})
+    f["busStops"] = stops[:3]
+    if stops:
+        add_src(f, "busstop")
+    d = stops[0]["distKm"] if stops else None
+    bus_hist["1km 이내" if d is not None and d <= 1 else "1~3km" if d is not None else "3km 내 없음"] += 1
+report.append("## 3-2. 버스정류장 연결 (직선거리)\n")
+report.append(f"- 전국 정류장 {bus['total']:,}곳 중 휴양림 5km 이내 {len(bus['stops']):,}곳 사용")
+report.append("- " + ", ".join(f"{k}: {v}곳" for k, v in bus_hist.items()) + "\n")
+log_issue(
+    "국토교통부_전국 버스정류장 위치정보",
+    "TAGO에 연계된 시·군만 포함되고, 정류장별 노선·배차 정보가 없음",
+    f"휴양림 {bus_hist['3km 내 없음']}곳은 3km 안에 정류장이 없거나 데이터가 없어 구분할 수 없음. 버스가 하루 몇 번 오는지 알 수 없음",
+    "전 시·군 정류장 포함, 휴양림 진입로 기준 정류장·노선·첫차/막차 정보를 휴양림 데이터에 연결",
+    en=("Nationwide Bus Stop Locations",
+        "Only cities linked to TAGO are included, and there are no routes or timetables per stop",
+        f"For {bus_hist['3km 내 없음']} forests we cannot tell whether there is no stop within 3 km or the data is missing; bus frequency is unknown",
+        "Cover all cities and counties, and link the stop, routes and first/last bus at each forest entrance to forest data"),
+)
+log_issue(
+    "국립자연휴양림 시설관련 정보 / 우선예약 및 추첨예약 정책",
+    "외국인 회원가입·본인인증·결제·입실 신분증 정보가 없고, 입·퇴실 시간과 바비큐 제한은 객실 설명 자유서술에만 있음",
+    "외국인 여행자가 예약할 수 있는지, 현장 규칙이 무엇인지 공공데이터로 미리 알 수 없음",
+    "외국인 예약 가능 여부·인정 신분증·해외 카드 결제 필드와 입·퇴실·취사 규칙 구조화 필드 추가, 영문 병기",
+    en=("National Recreation Forest Facility Information / Booking Policy",
+        "No data on foreigner sign-up, identity check, payment or ID at check-in; check-in times and barbecue rules exist only in free text",
+        "Foreign visitors cannot learn from public data whether they can book or what the on-site rules are",
+        "Add fields for foreigner booking, accepted ID and foreign card payment, structured check-in and cooking rules, and English text"),
+)
+
+
+# (2) 이용수칙: 국립휴양림 객실 설명에서 입·퇴실 시간과 바비큐(숯불) 제한 추출
+def hour_of(txt, ampm_default):
+    m = re.search(r"(오전|오후|낮|밤)?\s*(\d{1,2})\s*(?::\s*(\d{2})|시)", txt)
+    if not m:
+        return None
+    h = int(m[2])
+    ap = m[1] or ampm_default
+    if ap in ("오후", "밤") and h < 12:
+        h += 12
+    return f"{h:02d}:{m[3] or '00'}"
+
+
+def room_rules(rooms):
+    cin, cend, cout, bbq = Counter(), Counter(), Counter(), Counter()
+    for p in rooms:
+        t = re.sub(r"[​﻿]", "", p["상품설명"])
+        m = re.search(r"입실\s*(?:시간)?\s*[:：]\s*(.{0,30})", t)
+        if m:
+            seg = m[1]
+            a = hour_of(seg, "오후")
+            e = re.search(r"[-~]\s*(오후|밤)?\s*(\d{1,2})\s*시", seg)
+            if a:
+                cin[a] += 1
+            if e:
+                h = int(e[2])
+                cend[f"{h + 12 if h < 12 else h:02d}:00"] += 1
+        m = re.search(r"퇴실\s*(?:시간)?\s*[:：]\s*(.{0,30})", t)
+        if m:
+            h = hour_of(re.sub(r"익일\(퇴실일 기준\)", "다음날", m[1]), "오전")
+            if h:
+                cout[h] += 1
+        if re.search(r"연중\s*(숯불|바비큐|바베큐|숯)[^.。]{0,20}(금지|불가)", t):
+            bbq["yearRound"] += 1
+        elif re.search(r"산불\s*조심\s*기간", t) and re.search(r"바비큐|바베큐|숯|화로|취사", t):
+            bbq["fireSeason"] += 1
+    top = lambda c: c.most_common(1)[0][0] if c else None
+    return {
+        "checkin": top(cin),
+        "checkinEnd": top(cend),
+        "checkout": top(cout),
+        "bbq": top(bbq),
+        "idCheck": any("신분증" in p["상품설명"] for p in rooms),
+        "rooms": len(rooms),
+    }
+
+
+rules_count = 0
+for f in forests:
+    nat = f.get("national")
+    if not nat:
+        continue
+    rooms = [p for p in nat_by_forest.get(nat["forestName"], []) if p["상품구분"] == "숙박"]
+    if rooms:
+        nat["rules"] = room_rules(rooms)
+        rules_count += bool(nat["rules"]["checkin"])
+
+# (3) 아세안 우선예약: 예약정책 데이터의 '아세안우선예약' 정책(객실명 = 나라명)
+ASEAN_EN = {"라오스": "Laos", "말레이시아": "Malaysia", "미얀마": "Myanmar", "베트남": "Viet Nam", "브루나이": "Brunei",
+            "싱가포르": "Singapore", "인도네시아": "Indonesia", "캄보디아": "Cambodia", "태국": "Thailand", "필리핀": "Philippines"}
+asean_rows = [p for p in policy_rows if "아세안" in p["정책명"] and "우선예약" in p["정책명"]]
+if asean_rows:
+    f = find_forest(asean_rows[0]["기관명"])
+    rooms = sorted({p["상품명"].strip() for p in asean_rows})
+    countries = sorted({re.sub(r"\(.*?\)", "", r).strip() for r in rooms})
+    wins = {}
+    for p in asean_rows:
+        m = re.match(r"(\d{4})년 (\d{2})월", p["정책명"])
+        if m:
+            a = p["신청기간"].split("~")
+            wins[f"{m[1]}-{m[2]}"] = {"month": f"{m[1]}-{m[2]}", "applyFrom": a[0].strip(), "applyTo": a[-1].strip()}
+    all_rooms = [r["name"] for r in (f.get("national") or {}).get("roomList", [])]
+    f["asean"] = {
+        "rooms": rooms,
+        "countries": [{"ko": c, "en": ASEAN_EN.get(c, c)} for c in countries],
+        "otherRooms": sorted(set(all_rooms) - set(rooms)),
+        "windows": [wins[k] for k in sorted(wins)],
+        "tel": asean_rows[0]["연락처"].strip(),
+        "refDate": SOURCES["natpolicy"]["refDate"],
+    }
+    report.append(f"- 아세안 우선예약: {f['name']} 객실 {len(rooms)}실, {len(countries)}개국, {len(wins)}개월\n")
 
 # ---------------------------------------------------------------- 7. 주요시설명 키워드 → 단서
 FAC_KW = {
@@ -1086,7 +1511,9 @@ stats = {
     "nanumMatch": dict(dist_hist),
     "roomKeywordStats": kw_stats,
     "facilityHints": hint_counts,
-    "datasetsUsed": len(SOURCES),
+    "datasetsUsed": sum(1 for v in SOURCES.values() if not v.get("notPortal")),
+    "officialListAdded": len(list_added),
+    "officialListTotal": len(official["kfs"]),
     "toiletTotal": len(toilet_raw["rows"]),
     "toiletDiaperFilled": diaper_filled,
     "toiletHits": dict(toilet_hits),
@@ -1099,6 +1526,7 @@ stats = {
         "natpolicy": len(policy_rows),
         "toilet": len(toilet_raw["rows"]),
         "jeju": 0,
+        "busstop": bus["total"],
         **{k: EXTRA_ROWS.get(re.search(r"/data/(\d+)/", v["url"])[1], 0) for k, v in SOURCES.items()
            if k.startswith("nat") and k not in ("natfac", "natpolicy") or k in ("kidsforest", "healing")},
     },

@@ -3,12 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, ImageIcon, ImagePlus, Loader2, ScanSearch, Send, X } from "lucide-react";
 import { LENS_ITEMS } from "@/lib/reportKeys";
 import { ANSWER_LABEL, type Answer } from "./ReportForm";
+import { useLang } from "@/lib/useLang";
 
 type Suggestion = { itemKey: string; answer: Answer; clue: string };
 type Pick = { on: boolean; answer: Answer; memo: string };
 
 const LABEL = Object.fromEntries(LENS_ITEMS.map((i) => [i.key, i.label]));
+const LABEL_EN = Object.fromEntries(LENS_ITEMS.map((i) => [i.key, i.label_en]));
 const AI_SAYS: Record<Answer, string> = { yes: "있어 보임", no: "없어 보임", unsure: "판단 어려움" };
+const AI_SAYS_EN: Record<Answer, string> = { yes: "looks present", no: "looks absent", unsure: "hard to tell" };
 const thisMonth = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 7);
 
 /** 사진을 긴 변 1280px JPEG로 다시 그린다. 다시 그리면 위치정보(EXIF) 등 메타데이터가 모두 빠진다. */
@@ -242,13 +245,20 @@ export default function LensPanel({ forestId, onDone }: { forestId: string; onDo
 }
 
 /** 예시 결과: 실제 분석이 아니라 동작 방식을 보여 주는 고정 화면 */
-const SAMPLE: Suggestion[] = [
-  { itemKey: "roomEntrance", answer: "no", clue: "출입문 앞에 계단 두 칸이 보여요" },
-  { itemKey: "stairsHandrail", answer: "yes", clue: "계단 오른쪽에 손잡이가 있어요" },
-  { itemKey: "pathStepSlope", answer: "unsure", clue: "노면은 데크로 보이지만 경사는 사진으로 알기 어려워요" },
+const SAMPLE: (Suggestion & { clue_en: string })[] = [
+  { itemKey: "roomEntrance", answer: "no", clue: "출입문 앞에 계단 두 칸이 보여요", clue_en: "Two steps in front of the door" },
+  { itemKey: "stairsHandrail", answer: "yes", clue: "계단 오른쪽에 손잡이가 있어요", clue_en: "A handrail on the right side of the stairs" },
+  {
+    itemKey: "pathStepSlope",
+    answer: "unsure",
+    clue: "노면은 데크로 보이지만 경사는 사진으로 알기 어려워요",
+    clue_en: "The surface looks like decking, but the slope is hard to judge from a photo",
+  },
 ];
 
 function LensPreview() {
+  const { lang, t } = useLang();
+  const en = lang === "en";
   const [open, setOpen] = useState(false);
   return (
     <div className="card p-4 sm:p-5">
@@ -258,32 +268,44 @@ function LensPreview() {
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="flex flex-wrap items-center gap-2 text-lg font-bold">
-            사진으로 빈칸 채우기 <span className="tag">준비 중</span>
+            {t("사진으로 빈칸 채우기", "Fill blanks from a photo")} <span className="tag">{t("준비 중", "Coming soon")}</span>
           </h3>
-          <p className="text-sm text-muted">AI가 사진에서 문턱·손잡이 같은 단서를 찾아 제보를 도와요. 운영 비용 문제로 아직 쓸 수 없어요.</p>
+          <p className="text-sm text-muted">
+            {t(
+              "AI가 사진에서 문턱·손잡이 같은 단서를 찾아 제보를 도와요. 운영 비용 문제로 아직 쓸 수 없어요.",
+              "AI looks for clues such as thresholds and handrails in your photo to help you report. Not available yet because of running costs.",
+            )}
+          </p>
         </div>
       </div>
       <button type="button" className="btn btn-outline mt-3 w-full sm:w-auto" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        {open ? "예시 닫기" : "예시 화면 보기"}
+        {open ? t("예시 닫기", "Hide example") : t("예시 화면 보기", "See an example")}
       </button>
       {open && (
-        <div className="mt-3 space-y-2" aria-label="예시 화면">
+        <div className="mt-3 space-y-2" aria-label={t("예시 화면", "Example")}>
           <div className="flex items-center gap-3">
             <span aria-hidden="true" className="flex size-20 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 text-muted">
               <ImageIcon className="size-7" />
             </span>
-            <p className="text-sm text-muted">예시 사진: 숲속의집 출입구</p>
+            <p className="text-sm text-muted">{t("예시 사진: 숲속의집 출입구", "Example photo: cabin entrance")}</p>
           </div>
           <ul className="space-y-2">
             {SAMPLE.map((s) => (
               <li key={s.itemKey} className="rounded-xl border border-line bg-surface-2 p-3">
-                <span className="font-semibold">{LABEL[s.itemKey]}</span>
-                <span className="src src-web ml-2 align-middle">AI 제안 · {AI_SAYS[s.answer]}</span>
-                <span className="mt-0.5 block text-sm text-muted">{s.clue}</span>
+                <span className="font-semibold">{en ? LABEL_EN[s.itemKey] : LABEL[s.itemKey]}</span>
+                <span className="src src-web ml-2 align-middle">
+                  {t("AI 제안", "AI suggestion")} · {en ? AI_SAYS_EN[s.answer] : AI_SAYS[s.answer]}
+                </span>
+                <span className="mt-0.5 block text-sm text-muted">{en ? s.clue_en : s.clue}</span>
               </li>
             ))}
           </ul>
-          <p className="text-xs text-muted">실제로는 맞는 항목만 골라 제보하고, 사진은 저장하지 않아요.</p>
+          <p className="text-xs text-muted">
+            {t(
+              "실제로는 맞는 항목만 골라 제보하고, 사진은 저장하지 않아요.",
+              "You would pick only the matching items to report. Photos are not stored.",
+            )}
+          </p>
         </div>
       )}
     </div>

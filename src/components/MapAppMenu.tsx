@@ -1,15 +1,19 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, MapPinned } from "lucide-react";
+import { useLang } from "@/lib/useLang";
 
 /** 지도 앱 선택: 네이버 지도 / 카카오맵. 휴대폰에서는 각 웹 지도가 설치된 앱으로 이어 준다. */
 export default function MapAppMenu({ name, lat, lng }: { name: string; lat: number; lng: number }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const q = name.replace(/\(.*?\)/g, "").trim();
+  const { lang, t } = useLang();
+  // 한국 지도 앱은 한글 이름으로 검색해야 정확하다. 영어 화면에는 Google 지도도 함께 둔다(대중교통 길찾기용)
   const apps = [
-    { label: "네이버 지도", href: `https://map.naver.com/p/search/${encodeURIComponent(q)}` },
-    { label: "카카오맵", href: `https://map.kakao.com/link/map/${encodeURIComponent(q)},${lat},${lng}` },
+    { label: t("네이버 지도", "Naver Map"), href: `https://map.naver.com/p/search/${encodeURIComponent(q)}` },
+    { label: t("카카오맵", "KakaoMap"), href: `https://map.kakao.com/link/map/${encodeURIComponent(q)},${lat},${lng}` },
+    ...(lang === "en" ? [{ label: "Google Maps", href: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}` }] : []),
   ];
 
   useEffect(() => {
@@ -28,7 +32,7 @@ export default function MapAppMenu({ name, lat, lng }: { name: string; lat: numb
   return (
     <div ref={ref} className="relative">
       <button type="button" className="btn btn-outline" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        <MapPinned aria-hidden="true" className="size-4" /> 지도 앱
+        <MapPinned aria-hidden="true" className="size-4" /> {t("지도 앱", "Open in map")}
         <ChevronDown aria-hidden="true" className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
@@ -43,7 +47,7 @@ export default function MapAppMenu({ name, lat, lng }: { name: string; lat: numb
                 onClick={() => setOpen(false)}
               >
                 {a.label}
-                <span className="sr-only">(새 창)</span>
+                <span className="sr-only">{t("(새 창)", "(new window)")}</span>
               </a>
             </li>
           ))}

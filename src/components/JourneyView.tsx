@@ -14,26 +14,30 @@ import {
 } from "lucide-react";
 import CoverageBar from "./CoverageBar";
 import GroupPicker from "./GroupPicker";
-import ReportForm, { ANSWER_LABEL, type Report } from "./ReportForm";
+import ReportForm, { ANSWER_LABEL, ANSWER_LABEL_EN, type Report } from "./ReportForm";
 import LensPanel from "./LensPanel";
-import { STEPS } from "@/lib/groups";
+import { ITEM_KEYS } from "@/lib/reportKeys";
+import { ACCESS_MASK, STEPS, groupsMask } from "@/lib/groups";
 import { useGroups } from "@/lib/useGroups";
+import { useLang } from "@/lib/useLang";
 import type { Group, JourneyItem, Status } from "@/lib/types";
 
-const STATUS: Record<Status, { icon: typeof CircleCheck; label: string }> = {
-  ok: { icon: CircleCheck, label: "확인됨" },
-  warn: { icon: TriangleAlert, label: "추가 확인 필요" },
-  no: { icon: CircleX, label: "없음" },
-  unknown: { icon: CircleDashed, label: "빈칸" },
+// '빈칸'은 영어로 Not verified: 'Not available'로 옮기면 시설이 없다는 뜻으로 읽히므로 구분한다
+const STATUS: Record<Status, { icon: typeof CircleCheck; label: string; en: string }> = {
+  ok: { icon: CircleCheck, label: "확인됨", en: "Verified" },
+  warn: { icon: TriangleAlert, label: "추가 확인 필요", en: "Needs checking" },
+  no: { icon: CircleX, label: "없음", en: "Not available" },
+  unknown: { icon: CircleDashed, label: "빈칸", en: "Not verified" },
 };
 
 const SRC = {
-  public: { label: "공공데이터", cls: "src-public" },
-  operator: { label: "운영자 확인", cls: "src-operator" },
-  user: { label: "이용자 제보", cls: "src-user" },
+  public: { label: "공공데이터", en: "Public data", cls: "src-public" },
+  operator: { label: "운영자 확인", en: "Operator checked", cls: "src-operator" },
+  user: { label: "이용자 제보", en: "Visitor report", cls: "src-user" },
 };
 
 type ReportState = { mode: string; reports: Report[] } | null;
+const FLAG_KEY = "soopnurim.flagged";
 
 export default function JourneyView({
   items,
@@ -49,10 +53,10 @@ export default function JourneyView({
   coreKeys: Record<Group, string[]>;
 }) {
   const { groups } = useGroups();
-  const rel = useMemo(
-    () => (groups.length ? items.filter((it) => it.groups.some((g) => groups.includes(g))) : items),
-    [items, groups],
-  );
+  const { lang, t } = useLang();
+  // 유형을 고르지 않았을 때: 한국어 화면은 보행약자 세 유형, 영어 화면은 외국인 항목까지 모두
+  const mask = groupsMask(groups) || (lang === "en" ? 0 : ACCESS_MASK);
+  const rel = useMemo(() => (mask ? items.filter((it) => groupsMask(it.groups) & mask) : items), [items, mask]);
   const known = rel.filter((i) => i.status !== "unknown").length;
 
   // 이용자 제보 불러오기 (페이지는 정적 생성, 제보만 실시간)
@@ -77,27 +81,40 @@ export default function JourneyView({
 
   // 질문: 선택한 유형의 핵심 항목부터
   const askable = rel.filter((i) => (i.status === "unknown" || i.status === "warn") && i.question);
-  const order = (groups.length ? groups : (["wheelchair", "elder", "child"] as Group[])).flatMap((g) => coreKeys[g]);
+  const defaults: Group[] = lang === "en" ? ["foreign", "wheelchair", "elder", "child"] : ["wheelchair", "elder", "child"];
+  const order = (groups.length ? groups : defaults).flatMap((g) => coreKeys[g]);
   const rank = (k: string) => {
     const i = order.indexOf(k);
     return i === -1 ? 99 : i;
   };
-  const questions = [...askable].sort((a, b) => rank(a.key) - rank(b.key)).map((i) => i.question);
+  const questions = [...askable].sort((a, b) => rank(a.key) - rank(b.key)).map((i) => ({ q: i.question, ko: i.questionKo }));
 
   return (
     <div className="space-y-4">
       <div className="card space-y-4 p-4 sm:p-5">
         <GroupPicker compact />
-        {!groups.length && <p className="text-sm text-muted">고르면 필요한 항목만 보여 드려요.</p>}
+        {!groups.length && (
+          <p className="text-sm text-muted">
+            {t(
+              "고르면 필요한 항목만 보여 드려요. 외국인 여행자 항목은 '외국인 여행자'를 고르면 보여요.",
+              "Choose to see only what you need. All items are shown now.",
+            )}
+          </p>
+        )}
         <CoverageBar known={known} total={rel.length} size="lg" />
-        <Legend />
+        <Legend t={t} />
       </div>
 
       {rs?.mode === "error" && (
         <p role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
-          <span className="text-muted">이용자 제보를 불러오지 못했습니다. 공공데이터 정보는 그대로 볼 수 있습니다.</span>
+          <span className="text-muted">
+            {t(
+              "이용자 제보를 불러오지 못했습니다. 공공데이터 정보는 그대로 볼 수 있습니다.",
+              "Could not load visitor reports. Public data is still shown.",
+            )}
+          </span>
           <button type="button" className="font-semibold text-brand-strong underline underline-offset-2" onClick={load}>
-            다시 시도
+            {t("다시 시도", "Try again")}
           </button>
         </p>
       )}
@@ -119,10 +136,10 @@ export default function JourneyView({
                 >
                   {s.step}
                 </span>
-                <span className="text-lg font-bold">{s.title}</span>
+                <span className="text-lg font-bold">{lang === "en" ? s.title_en : s.title}</span>
                 <span className="ml-auto text-xs text-muted">
-                  확인 {filled.length} · 빈칸 {blank.length}
-                  {repN > 0 && ` · 제보 ${repN}`}
+                  {t(`확인 ${filled.length} · 빈칸 ${blank.length}`, `${filled.length} found · ${blank.length} not verified`)}
+                  {repN > 0 && t(` · 제보 ${repN}`, ` · ${repN} report(s)`)}
                 </span>
               </h3>
               <div className="px-4">
@@ -137,7 +154,7 @@ export default function JourneyView({
                   <details className={`${filled.length ? "border-t border-line" : ""}`} open={filled.length === 0 && blank.length <= 2}>
                     <summary className="flex min-h-12 cursor-pointer items-center gap-2 py-2 text-sm">
                       <CircleDashed aria-hidden="true" className="size-4 shrink-0 text-blank" />
-                      <span className="font-semibold">빈칸 {blank.length}개</span>
+                      <span className="font-semibold">{t(`빈칸 ${blank.length}개`, `${blank.length} not verified`)}</span>
                       <span className="min-w-0 truncate text-muted">{blank.map((b) => b.label).join(", ")}</span>
                       <ChevronDown aria-hidden="true" className="chev ml-auto size-4 shrink-0 text-muted" />
                     </summary>
@@ -159,14 +176,14 @@ export default function JourneyView({
   );
 }
 
-function Legend() {
+function Legend({ t }: { t: (ko: string, en: string) => string }) {
   return (
     <div className="flex flex-wrap gap-x-3 gap-y-1.5 border-t border-line pt-3 text-xs text-muted">
-      <span className="font-semibold">출처 표시</span>
-      <span className="src src-public">공공데이터</span>
-      <span className="src src-operator">운영자 확인</span>
-      <span className="src src-user">이용자 제보</span>
-      <span className="src src-web">온라인 자료 참고</span>
+      <span className="font-semibold">{t("출처 표시", "Sources")}</span>
+      <span className="src src-public">{t("공공데이터", "Public data")}</span>
+      <span className="src src-operator">{t("운영자 확인", "Operator checked")}</span>
+      <span className="src src-user">{t("이용자 제보", "Visitor report")}</span>
+      <span className="src src-web">{t("온라인 자료 참고", "Online reference")}</span>
     </div>
   );
 }
@@ -185,22 +202,23 @@ function ItemRow({
   mode?: string;
 }) {
   const st = STATUS[it.status];
+  const { lang, t } = useLang();
   const [open, setOpen] = useState(false);
   const canReport =
-    it.key !== "contact" && it.key !== "stay" && (it.status === "unknown" || it.status === "warn") && mode !== "error" && mode !== undefined;
+    ITEM_KEYS.includes(it.key) && it.key !== "stay" && (it.status === "unknown" || it.status === "warn") && mode !== "error" && mode !== undefined;
   return (
     <li className="py-3.5">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <strong className="font-semibold">{it.label}</strong>
         <span className={`st st-${it.status}`}>
           <st.icon aria-hidden="true" className="size-4" strokeWidth={2.25} />
-          {st.label}
+          {lang === "en" ? st.en : st.label}
         </span>
       </div>
       {it.value && <p className="mt-1 text-[0.95rem]">{it.value}</p>}
       {it.source ? (
         <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
-          <span className={`src ${SRC[it.source].cls}`}>{SRC[it.source].label}</span>
+          <span className={`src ${SRC[it.source].cls}`}>{lang === "en" ? SRC[it.source].en : SRC[it.source].label}</span>
           {it.sourceUrl ? (
             <a href={it.sourceUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2">
               {it.sourceLabel}
@@ -208,16 +226,21 @@ function ItemRow({
           ) : (
             <span>{it.sourceLabel}</span>
           )}
-          {it.sourceDate && <span>· 기준일 {it.sourceDate}</span>}
+          {it.sourceDate && (
+            <span>
+              · {t("기준일", "as of")} {it.sourceDate}
+            </span>
+          )}
         </p>
       ) : it.sourceUrl ? (
         <p className="mt-1 text-xs">
           <a href={it.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-brand-strong underline underline-offset-2">
-            참고 자료 열기 <ExternalLink aria-hidden="true" className="size-3" />
+            {t("참고 자료 열기", "Open reference")} <ExternalLink aria-hidden="true" className="size-3" />
           </a>
         </p>
       ) : (
-        it.status === "unknown" && !it.value && <p className="mt-1 text-sm text-muted">공공데이터에 이 정보가 없습니다.</p>
+        it.status === "unknown" &&
+        !it.value && <p className="mt-1 text-sm text-muted">{t("공공데이터에 이 정보가 없습니다.", "This is not in public data.")}</p>
       )}
 
       {it.web && it.web.length > 0 && (
@@ -225,10 +248,12 @@ function ItemRow({
           {it.web.map((w) => (
             <li key={w.url} className="rounded-lg border border-line px-3 py-2 text-sm">
               <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted">
-                <span className="src src-web">{w.kind === "official" ? "운영기관 공개자료" : "온라인 후기 참고"}</span>
-                <span>미확인 · 게시 {w.date}</span>
+                <span className="src src-web">
+                  {w.kind === "official" ? t("운영기관 공개자료", "Operator's published notice") : t("온라인 후기 참고", "Online review")}
+                </span>
+                <span>{t(`미확인 · 게시 ${w.date}`, `Not verified · posted ${w.date}`)}</span>
               </p>
-              <p className="mt-1">{w.summary}</p>
+              <p className="mt-1">{lang === "en" ? (w.summary_en ?? `${w.summary} (Korean original)`) : w.summary}</p>
               <a href={w.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-brand-strong underline underline-offset-2">
                 {w.title} <ExternalLink aria-hidden="true" className="size-3" />
               </a>
@@ -259,7 +284,9 @@ function ItemRow({
               className="inline-flex min-h-10 items-center gap-1.5 text-sm font-medium text-brand-strong"
             >
               <MessageSquarePlus aria-hidden="true" className="size-4" />
-              {it.status === "unknown" ? "다녀왔다면 이 빈칸 제보하기" : "다녀온 경험 제보하기"}
+              {it.status === "unknown"
+                ? t("다녀왔다면 이 빈칸 제보하기", "Been there? Fill in this blank")
+                : t("다녀온 경험 제보하기", "Report what you saw")}
             </button>
           )}
         </div>
@@ -269,17 +296,44 @@ function ItemRow({
 }
 
 function ReportSummary({ reports, forestId, onDone }: { reports: Report[]; forestId: string; onDone: () => void }) {
+  const { lang, t } = useLang();
   const [flagged, setFlagged] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      setFlagged(JSON.parse(localStorage.getItem(FLAG_KEY) || "[]"));
+    } catch {
+      /* 저장소 사용 불가 */
+    }
+  }, []);
+  const remember = (id: string) =>
+    setFlagged((f) => {
+      const next = [...new Set([...f, id])];
+      try {
+        localStorage.setItem(FLAG_KEY, JSON.stringify(next.slice(-200)));
+      } catch {
+        /* 무시 */
+      }
+      return next;
+    });
   const count = (a: Report["answer"]) => reports.filter((r) => r.answer === a).length;
+  const label = (a: Report["answer"]) => (lang === "en" ? ANSWER_LABEL_EN[a] : ANSWER_LABEL[a]);
   const flag = async (id: string) => {
-    if (!confirm("이 제보를 부적절한 내용으로 신고할까요? 신고가 3번 쌓이면 자동으로 숨겨집니다.")) return;
+    if (
+      !confirm(
+        t(
+          "이 제보를 부적절한 내용으로 신고할까요? 신고가 3번 쌓이면 자동으로 숨겨집니다.",
+          "Flag this report as inappropriate? It is hidden automatically after 3 flags.",
+        ),
+      )
+    )
+      return;
     try {
       await fetch("/api/reports/flag", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ forestId, id }),
       });
-      setFlagged((f) => [...f, id]);
+      remember(id);
       onDone();
     } catch {
       /* 무시 */
@@ -288,21 +342,21 @@ function ReportSummary({ reports, forestId, onDone }: { reports: Report[]; fores
   return (
     <div className="mt-2 rounded-lg border border-[var(--src-user)]/30 bg-[color-mix(in_srgb,var(--src-user)_6%,var(--surface))] px-3 py-2">
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-        <span className="src src-user">이용자 제보 {reports.length}건</span>
+        <span className="src src-user">{t(`이용자 제보 ${reports.length}건`, `${reports.length} visitor report(s)`)}</span>
         <span className="text-muted">
-          있었어요 {count("yes")} · 없었어요 {count("no")} · 잘 모름 {count("unsure")}
+          {label("yes")} {count("yes")} · {label("no")} {count("no")} · {label("unsure")} {count("unsure")}
         </span>
       </p>
       <ul className="mt-1 divide-y divide-line">
         {reports.slice(0, 5).map((r) => (
           <li key={r.id} className="flex items-start gap-2 py-1.5 text-sm">
             <span className="min-w-0 flex-1">
-              <span className="font-semibold">{ANSWER_LABEL[r.answer]}</span>
+              <span className="font-semibold">{label(r.answer)}</span>
               {r.memo && <> – {r.memo}</>}
-              {r.via === "lens" && <span className="ml-1.5 align-middle text-xs text-muted">(사진 보고 확인)</span>}
+              {r.via === "lens" && <span className="ml-1.5 align-middle text-xs text-muted">{t("(사진 보고 확인)", "(checked from a photo)")}</span>}
               <span className="block text-xs text-muted">
-                {r.visit ? `${r.visit} 방문` : "방문 시기 미기재"} · 제보{" "}
-                {new Date(r.createdAt).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" })}
+                {r.visit ? t(`${r.visit} 방문`, `Visited ${r.visit}`) : t("방문 시기 미기재", "Visit date not given")} ·{" "}
+                {t("제보", "reported")} {new Date(r.createdAt).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" })}
               </span>
             </span>
             <button
@@ -310,24 +364,37 @@ function ReportSummary({ reports, forestId, onDone }: { reports: Report[]; fores
               onClick={() => flag(r.id)}
               disabled={flagged.includes(r.id)}
               className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded px-1 text-xs text-muted hover:text-fg disabled:opacity-50"
-              aria-label="이 제보 신고"
+              aria-label={t("이 제보 신고", "Flag this report")}
             >
               <Flag aria-hidden="true" className="size-3.5" />
-              {flagged.includes(r.id) ? "신고됨" : "신고"}
+              {flagged.includes(r.id) ? t("신고됨", "Flagged") : t("신고", "Flag")}
             </button>
           </li>
         ))}
       </ul>
-      <p className="text-xs text-muted">제보는 운영기관이나 숲누림이 확인한 정보가 아닙니다. 방문 시기를 함께 보세요.</p>
+      <p className="text-xs text-muted">
+        {t(
+          "제보는 운영기관이나 숲누림이 확인한 정보가 아닙니다. 방문 시기를 함께 보세요.",
+          "Reports are not verified by the operator or Soopnurim. Check the visit date.",
+        )}
+      </p>
     </div>
   );
 }
 
-function PhoneQuestions({ questions, tel, forestName }: { questions: string[]; tel: string; forestName: string }) {
+type Question = { q: string; ko?: string };
+
+function PhoneQuestions({ questions, tel, forestName }: { questions: Question[]; tel: string; forestName: string }) {
+  const { lang, t } = useLang();
+  const en = lang === "en";
   const [copied, setCopied] = useState(false);
   const core = questions.slice(0, 5);
   const rest = questions.slice(5);
-  const text = `[${forestName} 문의 질문]\n` + questions.map((q, i) => `${i + 1}. ${q}`).join("\n");
+  // 영어 화면: 직원에게 보여 주거나 읽을 수 있게 한국어 원문을 먼저, 뜻을 괄호로
+  const text = en
+    ? `[${forestName} 문의]\n안녕하세요. 외국인 관광객입니다. 아래 내용을 여쭤보고 싶어요.\n` +
+      questions.map((x, i) => `${i + 1}. ${x.ko ?? x.q}\n   (${x.q})`).join("\n")
+    : `[${forestName} 문의 질문]\n` + questions.map((x, i) => `${i + 1}. ${x.q}`).join("\n");
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(text);
@@ -338,55 +405,89 @@ function PhoneQuestions({ questions, tel, forestName }: { questions: string[]; t
     }
   };
   if (!questions.length) return null;
+  const Row = ({ x, i, muted }: { x: Question; i: number; muted?: boolean }) => (
+    <li className="flex gap-3">
+      <span
+        className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+          muted ? "bg-surface-2 text-muted" : "bg-brand-soft text-brand-strong"
+        }`}
+      >
+        {i}
+      </span>
+      <span className="min-w-0">
+        {en && x.ko ? (
+          <>
+            <span lang="ko" className="block font-medium">
+              {x.ko}
+            </span>
+            <span className="block text-sm text-muted">{x.q}</span>
+          </>
+        ) : (
+          x.q
+        )}
+      </span>
+    </li>
+  );
   return (
     <section id="ask" aria-labelledby="phone-h" className="card scroll-mt-20 space-y-3 p-4 sm:p-5">
       <div>
         <h3 id="phone-h" className="text-lg font-bold">
-          운영기관에 전화로 물어볼 질문
+          {t("운영기관에 전화로 물어볼 질문", "Questions to ask the operator")}
         </h3>
-        <p className="text-sm text-muted">빈칸을 질문으로 바꿨습니다. 선택한 이용자 유형에 중요한 질문부터 정렬했어요.</p>
+        <p className="text-sm text-muted">
+          {t(
+            "빈칸을 질문으로 바꿨습니다. 선택한 이용자 유형에 중요한 질문부터 정렬했어요.",
+            "Each blank is turned into a question in Korean you can read out or show to staff, with the meaning in English. Most important first.",
+          )}
+        </p>
       </div>
-      <ol className="space-y-2">
-        {core.map((q, i) => (
-          <li key={q} className="flex gap-3">
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-strong">
-              {i + 1}
-            </span>
-            <span>{q}</span>
-          </li>
+      {en && (
+        <p className="rounded-lg bg-surface-2 px-3 py-2 text-sm">
+          <span lang="ko" className="block font-medium">
+            안녕하세요. 외국인 관광객입니다. 몇 가지 여쭤봐도 될까요?
+          </span>
+          <span className="block text-muted">Hello. I am a foreign tourist. May I ask a few questions?</span>
+        </p>
+      )}
+      <ol className="space-y-2.5">
+        {core.map((x, i) => (
+          <Row key={x.q} x={x} i={i + 1} />
         ))}
       </ol>
       {rest.length > 0 && (
         <details>
           <summary className="inline-flex min-h-10 cursor-pointer items-center gap-1 text-sm font-medium text-brand-strong">
-            질문 {rest.length}개 더 보기 <ChevronDown aria-hidden="true" className="chev size-4" />
+            {t(`질문 ${rest.length}개 더 보기`, `${rest.length} more question(s)`)} <ChevronDown aria-hidden="true" className="chev size-4" />
           </summary>
-          <ol start={core.length + 1} className="mt-1 space-y-2">
-            {rest.map((q, i) => (
-              <li key={q} className="flex gap-3">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs font-bold text-muted">
-                  {core.length + i + 1}
-                </span>
-                <span>{q}</span>
-              </li>
+          <ol start={core.length + 1} className="mt-1 space-y-2.5">
+            {rest.map((x, i) => (
+              <Row key={x.q} x={x} i={core.length + i + 1} muted />
             ))}
           </ol>
         </details>
       )}
       <div className="flex flex-wrap gap-2 border-t border-line pt-3">
         <button type="button" onClick={copy} className="btn btn-outline">
-          <ClipboardCopy aria-hidden="true" className="size-4" /> 질문 {questions.length}개 복사
+          <ClipboardCopy aria-hidden="true" className="size-4" />{" "}
+          {t(`질문 ${questions.length}개 복사`, `Copy ${questions.length} question(s) in Korean`)}
         </button>
         {tel ? (
           <a href={`tel:${tel.replace(/[^0-9+]/g, "")}`} className="btn btn-primary">
-            <Phone aria-hidden="true" className="size-4" /> {tel} 전화하기
+            <Phone aria-hidden="true" className="size-4" /> {t(`${tel} 전화하기`, `Call ${tel}`)}
           </a>
         ) : (
-          <span className="self-center text-sm text-muted">공공데이터에 전화번호가 없어 홈페이지에서 확인해야 합니다.</span>
+          <span className="self-center text-sm text-muted">
+            {t("공공데이터에 전화번호가 없어 홈페이지에서 확인해야 합니다.", "No phone number in public data; check the website.")}
+          </span>
         )}
       </div>
+      {en && (
+        <p className="text-xs text-muted">
+          Calls are answered in Korean. If you need help, the Korea Travel Hotline 1330 offers interpretation.
+        </p>
+      )}
       <p aria-live="polite" className="text-sm font-semibold text-ok">
-        {copied ? "질문 목록을 복사했습니다." : ""}
+        {copied ? t("질문 목록을 복사했습니다.", "Copied.") : ""}
       </p>
     </section>
   );

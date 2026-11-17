@@ -181,6 +181,13 @@ h3 {
   white-space: nowrap;
   transition: background 0.18s, border-color 0.18s;
 }
+/* 긴 이름(영어 휴양림 이름 등)이 들어가는 버튼은 줄바꿈 허용 */
+.btn-wrap {
+  white-space: normal;
+  max-width: 100%;
+  padding-block: 0.6rem;
+  text-align: left;
+}
 /* 주 버튼은 다크 모드에서도 같은 보라(흰 글자 대비 6.6:1) */
 .btn-primary {
   background: #5645d4;
@@ -253,6 +260,11 @@ h3 {
   white-space: nowrap;
   background: var(--blank-bg);
   color: var(--muted);
+}
+/* 데이터셋 이름처럼 긴 태그(특히 영어)는 줄바꿈 허용 */
+.tag-wrap {
+  white-space: normal;
+  max-width: 100%;
 }
 .tag-brand {
   background: var(--brand-soft);
