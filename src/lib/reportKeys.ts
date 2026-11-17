@@ -31,7 +31,8 @@ export const ITEM_KEYS = [
   "fireCooking",
 ];
 
-export const FOREST_ID = /^[sn]\d{3}$/;
+/** s: 표준데이터, n: 국립 시설정보로 추가, k: 산림청·숲나들e 공식 목록으로 추가 */
+export const FOREST_ID = /^[snk]\d{3}$/;
 
 /** 사진으로 확인할 수 있는 여정 항목 (렌즈가 단서를 제안하는 범위) */
 export const LENS_ITEMS: { key: string; label: string; label_en: string; look: string }[] = [

@@ -58,6 +58,8 @@ export default function JourneyView({
   const mask = groupsMask(groups) || (lang === "en" ? 0 : ACCESS_MASK);
   const rel = useMemo(() => (mask ? items.filter((it) => groupsMask(it.groups) & mask) : items), [items, mask]);
   const known = rel.filter((i) => i.status !== "unknown").length;
+  // 보기 방식: 단계별(빈칸 포함) / 확인된 정보만 한 목록으로
+  const [view, setView] = useState<"steps" | "known">("steps");
 
   // 이용자 제보 불러오기 (페이지는 정적 생성, 제보만 실시간)
   const [rs, setRs] = useState<ReportState>(null);
@@ -96,7 +98,7 @@ export default function JourneyView({
         {!groups.length && (
           <p className="text-sm text-muted">
             {t(
-              "고르면 필요한 항목만 보여 드려요. 외국인 여행자 항목은 '외국인 여행자'를 고르면 보여요.",
+              "고르면 필요한 항목만 보여 드려요. 외국인 여행자 항목은 '외국인 여행자'를 켜면 보여요.",
               "Choose to see only what you need. All items are shown now.",
             )}
           </p>
@@ -118,7 +120,61 @@ export default function JourneyView({
         </p>
       )}
 
-      {/* 단계는 접어 두고 확인·빈칸 수만 보여 준다. 누르면 항목과 출처가 펼쳐진다 */}
+      <div role="group" aria-label={t("보기 방식", "View")} className="flex gap-1 rounded-xl bg-surface-2 p-1 text-sm font-semibold">
+        {(
+          [
+            ["steps", t("단계별로 보기", "By step")],
+            ["known", t(`확인된 정보만 (${known})`, `Found only (${known})`)],
+          ] as const
+        ).map(([v, label]) => (
+          <button
+            key={v}
+            type="button"
+            aria-pressed={view === v}
+            onClick={() => setView(v)}
+            className={`min-h-10 flex-1 rounded-lg px-3 ${view === v ? "bg-surface text-fg shadow-sm" : "text-muted hover:text-fg"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {view === "known" ? (
+        <div className="card overflow-hidden">
+          {known === 0 ? (
+            <p className="px-4 py-4 text-sm text-muted">
+              {t("고른 유형에서 공공데이터로 확인된 항목이 아직 없어요.", "Nothing for the chosen types is confirmed by public data yet.")}
+            </p>
+          ) : (
+            STEPS.map((s) => {
+              const its = rel.filter((i) => i.step === s.step && i.status !== "unknown");
+              if (!its.length) return null;
+              return (
+                <section key={s.step} aria-labelledby={`known-${s.step}`} className="border-b border-line px-4 last:border-b-0">
+                  <h3 id={`known-${s.step}`} className="flex items-center gap-2 pt-3 text-xs font-bold text-muted">
+                    <span aria-hidden="true" className="flex size-5 items-center justify-center rounded-full bg-brand-fill text-[0.7rem] text-white">
+                      {s.step}
+                    </span>
+                    {lang === "en" ? s.title_en : s.title}
+                  </h3>
+                  <ul className="divide-y divide-line">
+                    {its.map((it) => (
+                      <ItemRow key={it.key} it={it} reports={byItem.get(it.key)} forestId={forestId} onDone={load} mode={rs?.mode} />
+                    ))}
+                  </ul>
+                </section>
+              );
+            })
+          )}
+          <p className="border-t border-line bg-surface-2 px-4 py-3 text-sm text-muted">
+            {t(
+              `공공데이터에 없는 빈칸 ${rel.length - known}개는 '단계별로 보기'와 아래 전화 질문에서 볼 수 있어요.`,
+              `The ${rel.length - known} blanks not in public data are under 'By step' and in the phone questions below.`,
+            )}
+          </p>
+        </div>
+      ) : (
+      /* 단계는 접어 두고 확인·빈칸 수만 보여 준다. 누르면 항목과 출처가 펼쳐진다 */
       <ol className="card divide-y divide-line overflow-hidden">
         {STEPS.map((s) => {
           const its = rel.filter((i) => i.step === s.step);
@@ -176,6 +232,7 @@ export default function JourneyView({
           );
         })}
       </ol>
+      )}
 
       <PhoneQuestions questions={questions} tel={tel} forestName={forestName} />
       {rs && rs.mode !== "error" && <LensPanel forestId={forestId} onDone={load} />}
@@ -358,15 +415,20 @@ function ReportSummary({ reports, forestId, onDone }: { reports: Report[]; fores
         </span>
       </p>
       <ul className="mt-1 divide-y divide-line">
-        {reports.slice(0, 5).map((r) => (
+        {[...reports]
+          .sort((a, b) => (b.visit || "").localeCompare(a.visit || "") || b.createdAt.localeCompare(a.createdAt))
+          .slice(0, 5)
+          .map((r) => (
           <li key={r.id} className="flex flex-wrap items-start gap-x-2 py-1.5 text-sm">
             <span className="min-w-0 flex-1">
               <span className="font-semibold">{label(r.answer)}</span>
               {r.memo && <> – {r.memo}</>}
               {r.via === "lens" && <span className="ml-1.5 align-middle text-xs text-muted">{t("(사진 보고 확인)", "(checked from a photo)")}</span>}
-              <span className="block text-xs text-muted">
-                {r.visit ? t(`${r.visit} 방문`, `Visited ${r.visit}`) : t("방문 시기 미기재", "Visit date not given")} ·{" "}
-                {t("제보", "reported")} {new Date(r.createdAt).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" })}
+              <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                <VisitChip visit={r.visit} />
+                <span className="text-muted">
+                  {t("제보", "reported")} {new Date(r.createdAt).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" })}
+                </span>
               </span>
             </span>
             <button
@@ -403,19 +465,56 @@ function ReportSummary({ reports, forestId, onDone }: { reports: Report[]; fores
   );
 }
 
+/** 방문 시기(YYYY-MM)가 몇 달 전인지. 한국 시간 기준 이번 달이면 0 */
+function monthsAgo(visit: string): number | null {
+  const m = /^(\d{4})-(\d{2})$/.exec(visit || "");
+  if (!m) return null;
+  const [y, mo] = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" }).split("-").map(Number);
+  return Math.max(0, (y - Number(m[1])) * 12 + (mo - Number(m[2])));
+}
+
+/** 제보의 방문 시기를 눈에 띄게. 1년이 넘은 방문은 지금과 다를 수 있다고 표시한다 */
+function VisitChip({ visit }: { visit: string }) {
+  const { t } = useLang();
+  const n = monthsAgo(visit);
+  if (n === null)
+    return <span className="rounded bg-surface-2 px-1.5 py-0.5 font-semibold text-muted">{t("방문 시기 미기재", "Visit date not given")}</span>;
+  const ago = n === 0 ? t("이번 달", "this month") : n < 12 ? t(`${n}개월 전`, `${n} mo ago`) : t(`${Math.floor(n / 12)}년 전`, `${Math.floor(n / 12)} yr ago`);
+  const old = n >= 12;
+  return (
+    <span
+      className={`rounded px-1.5 py-0.5 font-semibold ${old ? "bg-[var(--warn-bg)] text-warn" : "bg-brand-soft text-brand-strong"}`}
+      title={old ? t("1년 넘은 방문이라 지금과 다를 수 있어요", "Visited over a year ago; things may have changed") : undefined}
+    >
+      {t(`${visit} 방문 · ${ago}`, `Visited ${visit} · ${ago}`)}
+      {old && t(" · 지금과 다를 수 있음", " · may have changed")}
+    </span>
+  );
+}
+
 type Question = { q: string; ko?: string };
 
 function PhoneQuestions({ questions, tel, forestName }: { questions: Question[]; tel: string; forestName: string }) {
   const { lang, t } = useLang();
   const en = lang === "en";
   const [copied, setCopied] = useState(false);
+  // 체크를 푼 질문. 이용자 유형이 바뀌어 새로 생긴 질문은 기본으로 포함된다
+  const [off, setOff] = useState<Set<string>>(new Set());
   const core = questions.slice(0, 5);
   const rest = questions.slice(5);
+  const picked = questions.filter((x) => !off.has(x.q));
+  const flip = (q: string) =>
+    setOff((s) => {
+      const n = new Set(s);
+      if (n.has(q)) n.delete(q);
+      else n.add(q);
+      return n;
+    });
   // 영어 화면: 직원에게 보여 주거나 읽을 수 있게 한국어 원문을 먼저, 뜻을 괄호로
   const text = en
     ? `[${forestName} 문의]\n안녕하세요. 외국인 관광객입니다. 아래 내용을 여쭤보고 싶어요.\n` +
-      questions.map((x, i) => `${i + 1}. ${x.ko ?? x.q}\n   (${x.q})`).join("\n")
-    : `[${forestName} 문의 질문]\n` + questions.map((x, i) => `${i + 1}. ${x.q}`).join("\n");
+      picked.map((x, i) => `${i + 1}. ${x.ko ?? x.q}\n   (${x.q})`).join("\n")
+    : `[${forestName} 문의 질문]\n` + picked.map((x, i) => `${i + 1}. ${x.q}`).join("\n");
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(text);
@@ -427,8 +526,16 @@ function PhoneQuestions({ questions, tel, forestName }: { questions: Question[];
   };
   if (!questions.length) return null;
   const Row = ({ x, i, muted }: { x: Question; i: number; muted?: boolean }) => (
-    <li className="flex gap-3">
+    <li>
+      <label className={`flex cursor-pointer gap-3 ${off.has(x.q) ? "opacity-55" : ""}`}>
+      <input
+        type="checkbox"
+        checked={!off.has(x.q)}
+        onChange={() => flip(x.q)}
+        className="mt-0.5 size-5 shrink-0 accent-brand-fill"
+      />
       <span
+        aria-hidden="true"
         className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
           muted ? "bg-surface-2 text-muted" : "bg-brand-soft text-brand-strong"
         }`}
@@ -447,6 +554,7 @@ function PhoneQuestions({ questions, tel, forestName }: { questions: Question[];
           x.q
         )}
       </span>
+      </label>
     </li>
   );
   return (
@@ -457,8 +565,8 @@ function PhoneQuestions({ questions, tel, forestName }: { questions: Question[];
         </h3>
         <p className="text-sm text-muted">
           {t(
-            "빈칸을 질문으로 바꿨습니다. 선택한 이용자 유형에 중요한 질문부터 정렬했어요.",
-            "Each blank is turned into a question in Korean you can read out or show to staff, with the meaning in English. Most important first.",
+            "빈칸을 질문으로 바꿨습니다. 선택한 이용자 유형에 중요한 질문부터 정렬했어요. 체크를 풀면 복사에서 빠져요.",
+            "Each blank is turned into a question in Korean you can read out or show to staff, with the meaning in English. Most important first. Untick a question to leave it out of the copy.",
           )}
         </p>
       </div>
@@ -488,9 +596,9 @@ function PhoneQuestions({ questions, tel, forestName }: { questions: Question[];
         </details>
       )}
       <div className="flex flex-wrap gap-2 border-t border-line pt-3">
-        <button type="button" onClick={copy} className="btn btn-outline">
+        <button type="button" onClick={copy} disabled={!picked.length} className="btn btn-outline disabled:opacity-50">
           <ClipboardCopy aria-hidden="true" className="size-4" />{" "}
-          {t(`질문 ${questions.length}개 복사`, `Copy ${questions.length} question(s) in Korean`)}
+          {t(`고른 질문 ${picked.length}개 복사`, `Copy ${picked.length} selected question(s) in Korean`)}
         </button>
         {tel ? (
           <a href={`tel:${tel.replace(/[^0-9+]/g, "")}`} className="btn btn-primary">

@@ -143,7 +143,7 @@ export default function LensPanel({ forestId, onDone }: { forestId: string; onDo
       ) : (
         <div className="mt-3 space-y-3">
           <ul className="space-y-1 text-xs text-muted">
-            <li>사진은 분석에만 쓰고 저장하지 않습니다. 올리기 전에 위치정보(EXIF)를 지웁니다.</li>
+            <li>사진은 분석을 위해 외부 AI 서비스(Anthropic Claude)로 보내집니다. 숲누림 서버에는 저장하지 않고, 보내기 전에 위치정보(EXIF)를 지웁니다.</li>
             <li>사람 얼굴이나 차량 번호판이 나오지 않게 찍어 주세요.</li>
             <li>AI 제안은 틀릴 수 있습니다. 직접 본 것과 맞는 항목만 고르세요.</li>
           </ul>
@@ -302,8 +302,8 @@ function LensPreview() {
           </ul>
           <p className="text-xs text-muted">
             {t(
-              "실제로는 맞는 항목만 골라 제보하고, 사진은 저장하지 않아요.",
-              "You would pick only the matching items to report. Photos are not stored.",
+              "실제로는 맞는 항목만 골라 제보해요. 사진은 분석을 위해 외부 AI 서비스(Anthropic Claude)로 보내지고, 숲누림 서버에는 저장하지 않아요.",
+              "You would pick only the matching items to report. Photos are sent to an outside AI service (Anthropic Claude) for analysis and are not stored on Soopnurim's server.",
             )}
           </p>
         </div>

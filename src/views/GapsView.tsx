@@ -100,14 +100,19 @@ export default function GapsView({ lang }: { lang: Lang }) {
           <p className="max-w-2xl text-muted">
             We combined {datasets} public datasets to analyse {stats.forestTotal} recreation forests. Of the {access.length}{" "}
             items people with limited mobility need to judge a trip,{" "}
-            <strong className="text-fg">{fullyBlank} have no public data anywhere in the country.</strong> Of the{" "}
-            {foreign.length} items only foreign visitors need, {foreignBlank} have none.
+            <strong className="text-fg">
+              {fullyBlank} could not be found for any of the {stats.forestTotal} forests in these {datasets} datasets.
+            </strong>{" "}
+            Of the {foreign.length} items only foreign visitors need, {foreignBlank} could not be found either.
           </p>
         ) : (
           <p className="max-w-2xl text-muted">
             공공데이터 {datasets}종을 결합해 전국 휴양림 {stats.forestTotal}곳을 분석했습니다. 보행약자의 여정 판단에 필요한{" "}
-            {access.length}개 항목 중 <strong className="text-fg">{fullyBlank}개 항목은 전국 어디에도 공공데이터가 없습니다.</strong>{" "}
-            외국인 여행자에게만 필요한 {foreign.length}개 항목 중에서는 {foreignBlank}개가 없습니다.
+            {access.length}개 항목 중{" "}
+            <strong className="text-fg">
+              {fullyBlank}개 항목은 결합한 {datasets}종에서 {stats.forestTotal}곳 모두 확인할 수 없었습니다.
+            </strong>{" "}
+            외국인 여행자에게만 필요한 {foreign.length}개 항목 중에서는 {foreignBlank}개를 확인할 수 없었습니다.
           </p>
         )}
       </header>

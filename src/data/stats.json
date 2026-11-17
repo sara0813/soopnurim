@@ -1,13 +1,13 @@
 {
  "stdRows": 186,
- "stdUnique": 168,
- "stdDuplicates": 18,
+ "stdUnique": 163,
+ "stdDuplicates": 23,
  "nationalForests": 45,
  "nationalNotInStd": 32,
  "nanumCount": 167,
- "forestTotal": 222,
+ "forestTotal": 216,
  "nanumMatch": {
-  "3km 내 없음": 193,
+  "3km 내 없음": 187,
   "0.5km 이내": 17,
   "1~3km": 8
  },
@@ -70,13 +70,13 @@
   "healing": 9
  },
  "datasetsUsed": 19,
- "officialListAdded": 22,
+ "officialListAdded": 21,
  "officialListTotal": 205,
  "toiletTotal": 33820,
  "toiletDiaperFilled": 0,
  "toiletHits": {
-  "any": 99,
-  "disabled": 53,
+  "any": 96,
+  "disabled": 50,
   "child": 13
  },
  "lotteryForests": 45,
@@ -115,21 +115,21 @@
   },
   {
    "dataset": "전국휴양림표준데이터",
-   "problem": "같은 휴양림이 시·군과 시·도 등 여러 제공기관에서 중복 등록됨 (17곳, 18건)",
+   "problem": "같은 휴양림이 시·군과 시·도 등 여러 제공기관에서 중복 등록됨 (22곳, 23건)",
    "impact": "목록·지도에 같은 숲이 두 번 나타나고, 기준일이 다른 정보가 서로 충돌",
    "proposal": "휴양림 고유 ID(지정번호) 필드 추가, 제공기관 간 중복 등록 정리",
    "dataset_en": "National Recreation Forest Standard Data",
-   "problem_en": "The same forest is registered by several providers, e.g. both city and province (17 forests, 18 records)",
+   "problem_en": "The same forest is registered by several providers, e.g. both city and province (22 forests, 23 records)",
    "impact_en": "The same forest appears twice in lists and maps, with conflicting dates",
    "proposal_en": "Add a unique forest ID and clean up duplicates between providers"
   },
   {
    "dataset": "전국휴양림표준데이터 ↔ 산림청 자연휴양림 목록",
-   "problem": "산림청 누리집의 자연휴양림 205곳과 대조하니, 표준데이터와 국립 시설정보 어디에도 없는 휴양림이 22곳 (서울 노원구 수락휴 등)",
+   "problem": "산림청 누리집의 자연휴양림 205곳과 대조하니, 표준데이터와 국립 시설정보 어디에도 없는 휴양림이 21곳 (서울 노원구 수락휴 등)",
    "impact": "표준데이터만 쓰는 서비스에서는 서울처럼 휴양림이 있는 지역이 '0곳'으로 보이고, 새로 연 휴양림을 찾을 수 없음",
    "proposal": "산림청 지정 자연휴양림 전체를 표준데이터에 등록하도록 제공 의무화, 지정·개장·폐장 날짜 필드 추가",
    "dataset_en": "National Recreation Forest Standard Data ↔ Korea Forest Service forest list",
-   "problem_en": "Compared with the 205 recreation forests on the Korea Forest Service website, 22 are in neither the standard data nor the national facility data (e.g. Surakhyu in Nowon-gu, Seoul)",
+   "problem_en": "Compared with the 205 recreation forests on the Korea Forest Service website, 21 are in neither the standard data nor the national facility data (e.g. Surakhyu in Nowon-gu, Seoul)",
    "impact_en": "Services using only the standard data show regions such as Seoul as having no forests, and newly opened forests cannot be found",
    "proposal_en": "Require every designated recreation forest to be registered in the standard data, and add designation, opening and closing dates"
   },
@@ -195,11 +195,11 @@
   },
   {
    "dataset": "전국휴양림표준데이터 '홈페이지주소'",
-   "problem": "숲나들e 개별 하위 도메인 주소(예: godaesan.foresttrip.go.kr) 12곳이 접속하면 '요청하신 페이지를 찾을수 없습니다'로 이어짐",
+   "problem": "숲나들e 개별 하위 도메인 주소(예: godaesan.foresttrip.go.kr) 11곳이 접속하면 '요청하신 페이지를 찾을수 없습니다'로 이어짐",
    "impact": "예약하려고 홈페이지 링크를 누른 이용자가 오류 화면을 보고 예약 경로를 잃음",
    "proposal": "홈페이지주소를 숲나들e 통합 주소(www.foresttrip.go.kr/indvz/main.do?hmpgId=…)로 갱신, 링크 유효성 정기 점검",
    "dataset_en": "National Recreation Forest Standard Data 'homepage'",
-   "problem_en": "12 Foresttrip sub-domain addresses (e.g. godaesan.foresttrip.go.kr) lead to a 'page not found' error",
+   "problem_en": "11 Foresttrip sub-domain addresses (e.g. godaesan.foresttrip.go.kr) lead to a 'page not found' error",
    "impact_en": "Visitors who click the website link to book end up on an error page",
    "proposal_en": "Update to the unified Foresttrip address (www.foresttrip.go.kr/indvz/main.do?hmpgId=…) and check links regularly"
   },

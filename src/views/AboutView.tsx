@@ -33,7 +33,7 @@ const SRC: [string, string, string, string, string][] = [
   ["src-operator", "운영자 확인", "운영기관에 전화로 확인한 내용과 날짜", "Operator check", "What the operator confirmed by phone, and when"],
   ["src-user", "이용자 제보", "익명 제보와 방문 시기. 신고가 쌓이면 숨김", "Visitor report", "Anonymous reports with visit time; hidden after repeated flags"],
   ["src-web", "온라인 자료 참고", "공지·후기 요약. 항목 상태는 바꾸지 않음", "Online reference", "Summaries of notices and reviews; never changes an item's status"],
-  ["src-blank", "빈칸", "어디에도 정보가 없는 항목. 전화 질문으로 연결", "Blank", "No information anywhere; turned into a phone question"],
+  ["src-blank", "빈칸", "결합한 데이터에서 확인하지 못한 항목. 전화 질문으로 연결", "Blank", "Not found in the combined data; turned into a phone question"],
 ];
 
 export default function AboutView({ lang }: { lang: Lang }) {
@@ -154,8 +154,8 @@ export default function AboutView({ lang }: { lang: Lang }) {
         </p>
         <p className="text-sm text-muted">
           {t(
-            "사진은 위치정보를 지우고 분석에만 쓰며 저장하지 않아요.",
-            "Location data is removed from photos; they are used only for analysis and not stored.",
+            "켜면 사진은 위치정보를 지운 뒤 분석을 위해 외부 AI 서비스(Anthropic Claude)로 보내지고, 숲누림 서버에는 저장하지 않아요.",
+            "When enabled, photos have location data removed and are sent to an outside AI service (Anthropic Claude) for analysis. They are not stored on Soopnurim's server.",
           )}
         </p>
       </section>

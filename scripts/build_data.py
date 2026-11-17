@@ -30,7 +30,7 @@ SOURCES = {
         "kind": "산림 · 표준데이터",
         "license": LICENSE,
         "fields": "휴양림명, 시도명, 휴양림구분, 수용인원수, 입장료, 숙박가능여부, 주요시설명, 소재지도로명주소, 관리기관명, 휴양림전화번호, 홈페이지주소, 위도, 경도, 데이터기준일자",
-        "processing": "명칭 정규화 + 2km 이내 중복 레코드 정리(최신 기준일 유지), 주요시설명에서 장애인화장실·무장애·유아숲 키워드 추출",
+        "processing": "명칭 정규화 + 2km 이내 또는 같은 도로명주소의 중복 레코드 정리(최신 기준일 유지), 주요시설명에서 장애인화장실·무장애·유아숲 키워드 추출",
         "usedIn": "목록·지도의 기본 정보, 상세 기본 정보, ④숙박 가능 여부, ⑤장애인 화장실 단서, ⑥유아숲체험원, ⑦운영 연락처",
     },
     "nanum": {
@@ -227,7 +227,7 @@ SOURCES = {
         "kind": "산림 · 기관 누리집 공식 목록",
         "license": "산림청 누리집 공개 정보",
         "fields": "휴양림명, 운영 구분(국립·지자체·개인), 주소, 전화번호, 누리집",
-        "processing": "전국휴양림표준데이터·국립자연휴양림 시설정보와 이름·도로명주소로 대조해, 어디에도 없는 휴양림만 목록에 추가. 좌표는 주소를 OpenStreetMap(Nominatim)으로 검색한 값이라 오차가 있을 수 있음",
+        "processing": "전국휴양림표준데이터·국립자연휴양림 시설정보와 이름·도로명주소로 대조해, 어디에도 없는 휴양림만 목록에 추가. 좌표는 숲나들e '찾아오시는 길' 지도 값을 쓰고, 없으면 OpenStreetMap(Nominatim)에서 이름·주소로 찾은 값이라 오차가 있을 수 있음 (좌표 없는 곳은 지도에서 빠짐)",
         "usedIn": "휴양림 목록·지도(표준데이터에서 빠진 휴양림 보완), 연락처",
         "notPortal": True,
     },
@@ -238,7 +238,7 @@ SOURCES = {
         "kind": "산림 · 기관 누리집 공식 목록",
         "license": "숲나들e 누리집 공개 정보",
         "fields": "휴양림명, 휴양림 누리집 주소·전화",
-        "processing": "산림청 목록에도 없는 휴양림 중 숲나들e에서 예약을 받는 곳(이름에 '자연휴양림'이 있는 곳)만 추가. 좌표는 OpenStreetMap(Nominatim) 주소 검색",
+        "processing": "산림청 목록에도 없는 휴양림 중 숲나들e에서 예약을 받는 곳(이름에 '자연휴양림'이 있는 곳)만 추가. 좌표는 숲나들e 지도 값, 없으면 OpenStreetMap(Nominatim) 검색",
         "usedIn": "휴양림 목록·지도(신규 개장 휴양림 보완), 연락처",
         "notPortal": True,
     },
@@ -248,7 +248,7 @@ SOURCES = {
 SOURCES_EN = {
     "std": ("National Recreation Forest Standard Data", "Korea Forest Service and local governments (public data standard)", "Forest standard data",
             "Name, type, address, coordinates, phone, website, overnight stay, capacity, main facilities, reference date",
-            "Duplicates (same name within 2 km) merged, keeping the newest record", "Forest list, map, basic info"),
+            "Duplicates (same name within 2 km, or same road address) merged, keeping the newest record", "Forest list, map, basic info"),
     "nanum": ("Barrier-free Trail (Nanumgil) Status", "Korea Forest Service", "Forest file data",
               "Trail name, year built, operator, address, length",
               "Addresses geocoded; trails within 3 km of a forest are linked", "Step 6 barrier-free trail, map trail layer"),
@@ -300,12 +300,12 @@ SOURCES_EN = {
     "kfslist": ("Korea Forest Service list of recreation forests (national, local, private)", "Korea Forest Service",
                 "Forest sector · official list on an agency website",
                 "Forest name, operator type, address, phone, website",
-                "Compared with the standard data and national facility data by name and road address; only forests missing from both are added. Coordinates come from an OpenStreetMap (Nominatim) address search and may be off",
+                "Compared with the standard data and national facility data by name and road address; only forests missing from both are added. Coordinates come from the Foresttrip directions map, or else an OpenStreetMap (Nominatim) search, and may be off (forests without coordinates are left off the map)",
                 "Forest list and map (filling gaps in the standard data), contact"),
     "ftlist": ("Foresttrip forest list", "National Forest Recreation Service (Foresttrip)",
                "Forest sector · official list on an agency website",
                "Forest name, address and phone from each forest's Foresttrip page",
-               "Adds forests that take bookings on Foresttrip but are in neither the KFS list nor the standard data. Coordinates from OpenStreetMap (Nominatim)",
+               "Adds forests that take bookings on Foresttrip but are in neither the KFS list nor the standard data. Coordinates from the Foresttrip map, or else OpenStreetMap (Nominatim)",
                "Forest list and map (newly opened forests), contact"),
 }
 for _k, (_n, _o, _kd, _fd, _pr, _u) in SOURCES_EN.items():
@@ -354,6 +354,27 @@ def fnum(x):
 def norm_name(s):
     s = re.sub(r"\(.*?\)|\s|국립|자연휴양림|휴양림|산림욕장", "", s or "")
     return s
+
+
+def road_key(addr):
+    """도로명+건물번호 (예: 대둔산로6). 이름이 달라도 같은 곳을 찾기 위함"""
+    m = re.search(r"(\S+(?:로|길))\s*(\d+(?:-\d+)?)", addr or "")
+    return m.group(1) + m.group(2) if m else ""
+
+
+def road_name(addr):
+    """도로명만 (예: 1100로, 대둔산로). 건물번호는 뺀다"""
+    # '자은서부 2길 508'처럼 도로명이 띄어 쓴 번호로 끝나는 경우도 한 도로명으로 본다
+    m = re.search(r"([가-힣A-Za-z\d]+(?:\s\d+(?:번)?(?:로|길))|[가-힣A-Za-z\d]+(?:로|길))\s*\d", addr or "")
+    return m.group(1).replace(" ", "") if m else ""
+
+
+def roads_differ(a, b):
+    """둘 다 도로명이 있고 서로 다른 길일 때만 True.
+    '제주 1100로' ↔ '1100로'처럼 앞에 지역명이 붙은 경우와 한 글자 오타('구인원길' ↔ '구인월길')는 같은 길로 본다"""
+    if not (a and b) or a.endswith(b) or b.endswith(a):
+        return False
+    return not (len(a) == len(b) and sum(x != y for x, y in zip(a, b)) <= 1)
 
 
 def split_facilities(s):
@@ -441,7 +462,8 @@ for i, r in enumerate(STD_ROWS):
         }
     )
 
-# 중복 제거: 정규화 이름이 같고 2km 이내면 같은 휴양림 → 기준일이 최신인 레코드만 남김
+# 중복 제거: 정규화 이름이 같고 2km 이내이거나, 도로명주소(도로명+건물번호)가 같고 0.5km 이내면 같은 휴양림
+# (예: '갈모봉자연휴양림(고성)' ↔ '고성갈모봉 자연휴양림'처럼 이름 표기만 다른 중복 등록) → 기준일이 최신인 레코드만 남김
 def paren(s):
     m = re.search(r"\((.*?)\)", s or "")
     return norm_name(m.group(1)) if m else ""
@@ -451,7 +473,11 @@ def same_forest(a, b):
     na, nb = norm_name(a["name"]), norm_name(b["name"])
     # '산삼휴양밸리(대봉캠핑랜드)' ↔ '대봉캠핑랜드' 처럼 괄호 속 이름이 상대 이름인 경우도 같은 곳
     name_eq = na == nb or (paren(a["name"]) and paren(a["name"]) == nb) or (paren(b["name"]) and paren(b["name"]) == na)
-    return name_eq and a["lat"] and b["lat"] and haversine(a["lat"], a["lng"], b["lat"], b["lng"]) < 2
+    if not (a["lat"] and b["lat"]):
+        return False
+    d = haversine(a["lat"], a["lng"], b["lat"], b["lng"])
+    rk = road_key(a["address"])
+    return (name_eq and d < 2) or (rk and rk == road_key(b["address"]) and d < 0.5)
 
 
 groups = []
@@ -466,7 +492,8 @@ for f in forests:
 dups = [g for g in groups if len(g) > 1]
 forests = []
 for g in groups:
-    g.sort(key=lambda f: (f["refDate"], len(f["tel"]) > 0, len(f["facilities"])), reverse=True)
+    # 기준일이 같으면 '자연휴양림'이 이름에 있는 기록을 남긴다 (예: 방화동자연휴양림 ↔ 방화동가족휴가촌)
+    g.sort(key=lambda f: (f["refDate"], "자연휴양림" in f["name"], len(f["tel"]) > 0, len(f["facilities"])), reverse=True)
     keep = g[0]
     if len(g) > 1:
         keep["duplicates"] = [{"name": d["name"], "institution": d["institution"], "refDate": d["refDate"]} for d in g[1:]]
@@ -476,7 +503,7 @@ for g in groups:
                 if not keep[k] and d[k]:
                     keep[k] = d[k]
     forests.append(keep)
-report.append("### 중복 레코드 (정규화 이름 동일 + 2km 이내)" + chr(10))
+report.append("### 중복 레코드 (정규화 이름 동일 + 2km 이내, 또는 도로명주소 동일 + 0.5km 이내)" + chr(10))
 for g in dups:
     report.append("- " + " / ".join(f"{d['name']}({d['institution']}, {d['refDate']})" for d in g))
 report.append(chr(10) + f"→ {sum(len(g) - 1 for g in dups)}건 제거, 기준일 최신 레코드 유지 (표준데이터 {len(STD_ROWS)}건 → {len(forests)}곳)" + chr(10))
@@ -722,12 +749,6 @@ def name_keys(n):
     return {k.replace("산림휴양관", "") for k in keys if len(k) >= 2}
 
 
-def road_key(addr):
-    """도로명+건물번호 (예: 대둔산로6). 이름이 달라도 같은 곳을 찾기 위함"""
-    m = re.search(r"(\S+(?:로|길))\s*(\d+(?:-\d+)?)", addr or "")
-    return m.group(1) + m.group(2) if m else ""
-
-
 def match_official(name, addr):
     sido, sgg = region_of(addr)
     keys = name_keys(name)
@@ -742,11 +763,11 @@ def match_official(name, addr):
             return hit, "주소"
     # 이름 일부가 겹치고 같은 시·군·구일 때만 같은 곳으로 본다 (예: 금산 ↔ 금산산림문화타운 오인 방지)
     # 둘 다 도로명이 있는데 서로 다르면 다른 곳 (예: 국립 금산자연휴양림 거북바위길 ↔ 금산산림문화타운 느티골길)
-    road = re.sub(r"\d.*$", "", rk)
+    road = road_name(addr)
     for f in forests:
         fk = name_keys(f["name"])
-        froad = re.sub(r"\d.*$", "", road_key(f.get("address")))
-        if road and froad and road != froad:
+        froad = road_name(f.get("address"))
+        if roads_differ(road, froad):
             continue
         if sgg and sgg in (f.get("address") or "") and any(a in b or b in a for a in fk for b in keys):
             return f, "이름 일부+시군구"
@@ -759,6 +780,20 @@ LIST_NAME_FIX = {
     "소노벨비발디파(두릉산자연휴양림)": "두릉산자연휴양림(소노벨 비발디파크)",
     "집다리골자연휴양림(강원숲체험장포함)": "집다리골자연휴양림(강원숲체험장 포함)",
 }
+# 한 번 쓴 id는 다른 휴양림에 다시 주지 않는다 (공유된 주소·제보가 엉뚱한 곳을 가리키지 않게).
+# k002 남원흥부골자연휴양림은 표준데이터 '흥부골자연휴양림'(s131, 도로명 오타 '구인원길')과 같은 곳으로 확인돼 빠짐
+RETIRED_IDS = {"k002"}
+_next_k = 0
+
+
+def next_list_id():
+    global _next_k
+    while f"k{_next_k:03d}" in RETIRED_IDS:
+        _next_k += 1
+    _next_k += 1
+    return f"k{_next_k - 1:03d}"
+
+
 for src, entries in (("kfslist", official["kfs"]), ("ftlist", official["foresttrip"])):
     for e in entries:
         if src == "ftlist" and ("자연휴양림" not in e["name"] or not e.get("address")):
@@ -775,7 +810,7 @@ for src, entries in (("kfslist", official["kfs"]), ("ftlist", official["foresttr
         g = geo.get(e["name"])
         not_open = e.get("tel") == "미운영"
         forests.append({
-            "id": f"k{len(list_added):03d}",
+            "id": next_list_id(),
             "name": LIST_NAME_FIX.get(e["name"], e["name"]),
             "sido": "",
             "ownership": e.get("ownership") or "공유림",
@@ -1285,7 +1320,7 @@ for f in forests:
         f["safety"] = {"items": [s[k] for k in SAFETY_ITEMS if k in s], "lastDate": max(v["date"] for v in s.values())}
         add_src(f, "natsafety")
 
-# (9) 유아숲체험원 현황, (10) 치유의숲 현황: 이름에 휴양림명이 들어가면 '안', 아니면 같은 시·군·구
+# (9) 유아숲체험원 현황, (10) 치유의숲 현황: 이름에 휴양림명이 들어가고 같은 시·군·구이며 도로명이 다르지 않으면 '안', 아니면 같은 시·군·구
 def place_index(rows, name_key, addr_key):
     out = []
     for r in rows:
@@ -1298,7 +1333,19 @@ def link_places(key, places, src):
     hits = 0
     for f in forests:
         nn = norm_name(f["name"])
-        inside = [p for p in places if nn and len(nn) >= 2 and nn in norm_name(p["name"])]
+        froad = road_name(f.get("address"))
+
+        def is_inside(p):
+            if not (nn and len(nn) >= 2 and nn in norm_name(p["name"])):
+                return False
+            # 이름이 같아도 다른 시·군·구면 다른 곳 (예: 원주 백운산자연휴양림 ↔ 광양 백운산치유의숲)
+            if f["sigungu"] and p["sigungu"] and p["sigungu"] != f["sigungu"]:
+                return False
+            # 둘 다 도로명이 있는데 다르면 휴양림 안으로 보지 않는다 (예: 서귀포자연휴양림 1100로 ↔ 서귀포 치유의 숲 산록남로)
+            proad = road_name(p["address"])
+            return not roads_differ(froad, proad)
+
+        inside = [p for p in places if is_inside(p)]
         same = [p for p in places if p not in inside and f["sigungu"] and p["sigungu"] == f["sigungu"] and p["sido"] == f["sido"]]
         if inside or same:
             f[key] = {"inside": inside[:3], "sameArea": same[:4], "sameAreaCount": len(same)}
