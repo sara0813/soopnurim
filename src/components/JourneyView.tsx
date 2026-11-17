@@ -115,7 +115,7 @@ export default function JourneyView({
               <h3 className="flex items-center gap-3 border-b border-line bg-surface-2 px-4 py-3">
                 <span
                   aria-hidden="true"
-                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-strong text-sm font-bold text-white"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-fill text-sm font-bold text-white"
                 >
                   {s.step}
                 </span>

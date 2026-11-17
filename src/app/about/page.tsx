@@ -58,7 +58,7 @@ export default function About() {
             ],
           ].map(([t, d], i) => (
             <li key={t} className="flex gap-3">
-              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-strong text-sm font-bold text-white">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-fill text-sm font-bold text-white">
                 {i + 1}
               </span>
               <span>

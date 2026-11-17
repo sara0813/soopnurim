@@ -73,7 +73,7 @@ export default function ReportForm({
         </legend>
         <div className="flex flex-wrap gap-2">
           {(Object.keys(ANSWER_LABEL) as Answer[]).map((a) => (
-            <label key={a} className="chip has-[:checked]:border-brand-strong has-[:checked]:bg-brand-strong has-[:checked]:text-white">
+            <label key={a} className="chip has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-on-ink">
               <input type="radio" name={name} value={a} checked={answer === a} onChange={() => setAnswer(a)} className="sr-only" />
               {ANSWER_LABEL[a]}
             </label>

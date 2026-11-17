@@ -30,7 +30,7 @@ export default function GroupPicker({ compact = false }: { compact?: boolean }) 
               <span
                 aria-hidden="true"
                 className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
-                  on ? "bg-brand-strong text-white" : "bg-surface-2 text-muted"
+                  on ? "bg-brand-fill text-white" : "bg-surface-2 text-muted"
                 }`}
               >
                 <Icon className="size-5" strokeWidth={2} />

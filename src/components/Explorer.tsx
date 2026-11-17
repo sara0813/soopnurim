@@ -218,11 +218,14 @@ export default function Explorer({
             ],
             ["정보가 없으면 무엇을 물어봐야 할지 막막해요", "빈칸은 운영기관에 그대로 물어볼 전화 질문 목록이 돼요"],
             ["공식 정보만으로는 실제 상태를 알기 어려워요", "다녀온 분의 제보를 방문 시기와 함께 따로 보여 드려요"],
-          ].map(([problem, result]) => (
-            <li key={problem} className="rounded-xl border border-line bg-surface px-3.5 py-3">
+          ].map(([problem, result], i) => (
+            <li
+              key={problem}
+              className={`rounded-xl px-4 py-3.5 ${["bg-tint-lavender", "bg-tint-peach", "bg-tint-mint"][i]}`}
+            >
               <p className="text-muted">{problem}</p>
               <p className="mt-1.5 flex gap-1.5 font-semibold">
-                <ArrowRight aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-brand-strong" />
+                <ArrowRight aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
                 <span>{result}</span>
               </p>
             </li>
@@ -248,7 +251,7 @@ export default function Explorer({
       {/* 검색·필터: 검색줄만 위에 고정, 상세 조건은 펼쳐서 */}
       <section
         aria-label="검색과 필터"
-        className="card sticky top-0 z-[1100] space-y-3 p-3 shadow-[0_4px_16px_rgb(16_40_28/0.06)]"
+        className="card sticky top-0 z-[1100] space-y-3 p-3 shadow-[0_4px_12px_rgb(15_15_15/0.06)]"
       >
         <div className="flex gap-2">
           <label className="relative flex-1">
@@ -377,7 +380,7 @@ export default function Explorer({
               aria-pressed={layers.nanum}
               onClick={() => setLayers((l) => ({ ...l, nanum: !l.nanum }))}
             >
-              <span aria-hidden="true" className="inline-block size-2.5 rounded-full bg-[#d97706] ring-2 ring-white" />
+              <span aria-hidden="true" className="inline-block size-2.5 rounded-full bg-[#dd5b00] ring-2 ring-white" />
               무장애나눔길
             </button>
             <button
@@ -386,7 +389,7 @@ export default function Explorer({
               aria-pressed={layers.toilet}
               onClick={() => setLayers((l) => ({ ...l, toilet: !l.toilet }))}
             >
-              <span aria-hidden="true" className="inline-block size-2.5 rounded-full bg-[#2563eb] ring-2 ring-white" />
+              <span aria-hidden="true" className="inline-block size-2.5 rounded-full bg-[#0075de] ring-2 ring-white" />
               장애인·어린이 화장실
             </button>
           </div>

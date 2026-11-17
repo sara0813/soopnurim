@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "보행약자를 위한 자연휴양림 여정 정보·빈칸 확인 서비스",
     start_url: "/",
     display: "standalone",
-    background_color: "#f7f8f5",
-    theme_color: "#1f6b45",
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
     lang: "ko",
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png" },

@@ -104,8 +104,8 @@ function PointLayer({ points, kind }: { points: (NanumPoint | ToiletPoint)[]; ki
         const t = p as ToiletPoint;
         return L.circleMarker([p.lat, p.lng], {
           radius: isN ? 7 : 6,
-          color: isN ? "#8a4500" : "#1f4f8f",
-          fillColor: isN ? "#e07b00" : "#3b82f6",
+          color: isN ? "#793400" : "#005bab",
+          fillColor: isN ? "#dd5b00" : "#0075de",
           fillOpacity: 0.9,
           weight: 2,
         }).bindPopup(
@@ -131,7 +131,7 @@ function MyLocation({ myLoc }: { myLoc: Props["myLoc"] }) {
       radius: 9,
       color: "#fff",
       weight: 3,
-      fillColor: "#d6336c",
+      fillColor: "#ff64c8",
       fillOpacity: 1,
     }).bindTooltip("내 위치");
     m.addTo(map);
