@@ -10,7 +10,7 @@ export default function CoverageBar({ known, total, size = "md" }: { known: numb
             · 필요 정보 {total}개 중 {known}개 확인
           </span>
         </span>
-        <span className={lg ? "text-xl font-bold tabular-nums" : "text-sm font-bold tabular-nums"}>{pct}%</span>
+        <span className={`shrink-0 whitespace-nowrap font-bold tabular-nums ${lg ? "text-xl" : "text-sm"}`}>{pct}%</span>
       </div>
       <div
         role="meter"

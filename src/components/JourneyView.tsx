@@ -93,6 +93,14 @@ export default function JourneyView({
         <Legend />
       </div>
 
+      {rs?.mode === "error" && (
+        <p role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+          <span className="text-muted">이용자 제보를 불러오지 못했습니다. 공공데이터 정보는 그대로 볼 수 있습니다.</span>
+          <button type="button" className="font-semibold text-brand-strong underline underline-offset-2" onClick={load}>
+            다시 시도
+          </button>
+        </p>
+      )}
       {rs && rs.mode !== "error" && <LensPanel forestId={forestId} onDone={load} />}
 
       <ol className="space-y-3">

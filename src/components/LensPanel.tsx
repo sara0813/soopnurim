@@ -115,7 +115,8 @@ export default function LensPanel({ forestId, onDone }: { forestId: string; onDo
     }
   };
 
-  if (enabled === null) return null;
+  // 분석 기능이 꺼져 있으면(API 키 없음) 패널 자체를 보이지 않는다
+  if (!enabled) return null;
 
   return (
     <div className="card p-4 sm:p-5">
@@ -131,9 +132,7 @@ export default function LensPanel({ forestId, onDone }: { forestId: string; onDo
         </div>
       </div>
 
-      {!enabled ? (
-        <p className="mt-3 rounded-lg bg-surface-2 px-3 py-2 text-sm text-muted">사진 분석 기능은 준비 중입니다. 지금은 항목별 제보 버튼을 이용해 주세요.</p>
-      ) : !open ? (
+      {!open ? (
         <button type="button" className="btn btn-outline mt-3 w-full sm:w-auto" onClick={() => setOpen(true)}>
           <Camera aria-hidden="true" className="size-4" /> 사진 올리기
         </button>

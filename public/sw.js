@@ -1,5 +1,5 @@
 // 숲누림 서비스 워커: 페이지는 네트워크 우선(오프라인 시 캐시), 정적 파일은 캐시 우선
-const CACHE = "soopnurim-v3";
+const CACHE = "soopnurim-v4";
 const PRECACHE = ["/", "/gaps", "/data", "/about", "/icon.svg"];
 
 self.addEventListener("install", (e) => {
@@ -28,8 +28,10 @@ self.addEventListener("fetch", (e) => {
         (hit) =>
           hit ||
           fetch(req).then((res) => {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
+            if (res.ok) {
+              const copy = res.clone();
+              caches.open(CACHE).then((c) => c.put(req, copy));
+            }
             return res;
           }),
       ),
@@ -41,8 +43,11 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(
       fetch(req)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
+          // 정상 응답만 저장 (404·오류 페이지가 오프라인용으로 남지 않게)
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+          }
           return res;
         })
         .catch(() => caches.match(req).then((hit) => hit || caches.match("/"))),

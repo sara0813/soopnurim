@@ -30,6 +30,14 @@ export default function About() {
 
       <section className="card space-y-3 p-4 sm:p-5">
         <h2 className="text-xl font-bold">기존 서비스와 무엇이 다른가요?</h2>
+        <p>
+          숲누림의 핵심은 정보를 보여 주는 데서 끝나지 않고, <strong>공공데이터가 답하지 못하는 빈칸을 이용자가 실제로 물어볼
+          질문으로 바꾸는 것</strong>입니다. 그 질문의 답은 다녀온 분의 제보로 모이고, 전국에서 반복되는 빈칸은{" "}
+          <Link href="/gaps" className="underline underline-offset-2">
+            데이터 개선 제안
+          </Link>
+          으로 정리해 공공데이터를 고칠 근거로 돌려줍니다.
+        </p>
         <p className="text-muted">
           무장애 관광정보, 무장애나눔길 지도, 휴양림 예약, 사진 기반 접근성 제보는 이미 좋은 서비스가 있습니다. 숲누림은 이들을
           대신하지 않고, 흩어진 정보를 산림여행 한 건의 여정으로 잇는 데 집중합니다.
@@ -109,15 +117,15 @@ export default function About() {
       </section>
 
       <section className="card space-y-2 p-4 sm:p-5">
-        <h2 className="text-xl font-bold">숲누림 렌즈 (AI 보조 제보)</h2>
+        <h2 className="text-xl font-bold">준비 중: 숲누림 렌즈 (AI 보조 제보)</h2>
         <p>
-          휴양림 상세 페이지의 &lsquo;사진으로 빈칸 채우기&rsquo;에서 다녀온 곳 사진을 올리면, AI가 사진 속 단서(문턱, 경사로,
-          손잡이 등)를 찾아 어떤 항목에 제보할지 <strong>제안만</strong> 합니다. 제보로 남는 것은 이용자가 직접 고르고 확인한
-          항목뿐이며, 이 제보에는 &lsquo;사진 보고 확인&rsquo;이 함께 표시됩니다.
+          다녀온 곳 사진을 올리면 AI가 사진 속 단서(문턱, 경사로, 손잡이 등)를 찾아 어떤 항목에 제보할지 <strong>제안만</strong>
+          하는 기능입니다. 기능은 만들어 두었고, 운영 비용 문제로 아직 켜지 않았습니다. 지금은 항목마다 있는 제보 버튼으로 직접
+          남길 수 있습니다.
         </p>
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
-          <li>사진은 올리기 전에 브라우저에서 크기를 줄이고 위치정보(EXIF)를 지웁니다.</li>
-          <li>사진은 분석에만 쓰고 숲누림에 저장하지 않습니다. 분석에는 Anthropic의 Claude를 사용합니다.</li>
+          <li>켜게 되면 사진은 올리기 전에 브라우저에서 크기를 줄이고 위치정보(EXIF)를 지웁니다.</li>
+          <li>사진은 분석에만 쓰고 저장하지 않으며, 제보로 남는 것은 이용자가 직접 고르고 확인한 항목뿐입니다.</li>
           <li>AI는 판정을 하지 않고 사진에 보이는 사실만 제안하며, 얼굴·차량번호 같은 개인정보는 적지 않도록 했습니다.</li>
         </ul>
       </section>

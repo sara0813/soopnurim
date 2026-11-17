@@ -180,6 +180,18 @@ export default function Explorer({
     );
   };
 
+  const itemCount = forests[0]?.items.length ?? 0;
+  // 처음 온 사람이 바로 눌러 볼 예시: 정보가 가장 많이 채워진 휴양림 (휴장 제외)
+  const example = useMemo(() => {
+    let best: ForestSummary | null = null;
+    let bestK = -1;
+    for (const f of forests) {
+      if (f.closed) continue;
+      const k = coverage(f.items, 0).known;
+      if (k > bestK) [best, bestK] = [f, k];
+    }
+    return best;
+  }, [forests]);
   const selected = rows.find((r) => r.f.id === selectedId) ?? null;
   const activeCount = (st.sido ? 1 : 0) + st.chips.filter((c) => c !== "open").length + (st.sort !== "name" ? 1 : 0);
   const filtered = st.q || st.sido || st.chips.length > 1 || (st.chips.length === 1 && st.chips[0] !== "open");
@@ -191,33 +203,45 @@ export default function Explorer({
           산림공공데이터 {forestDatasetCount}종 포함 공공데이터 {datasetCount}종 · 휴양림 {forests.length}곳
         </p>
         <h1 id="intro" className="text-[1.6rem] font-bold leading-snug sm:text-[2rem]">
-          휴양림 여행, 가기 전에 확인할 정보를
-          <br className="hidden sm:block" /> 한 곳에서 보세요
+          휴양림 예약 전에,
+          <br /> 우리 가족이 이용할 수 있을지 확인하세요
         </h1>
         <p className="max-w-2xl text-muted">
-          주차부터 진입로·숙소·화장실·숲길·안전까지, 흩어진 공공데이터를 여행 순서대로 이었습니다. 정보마다 출처와 기준일을
-          붙이고, 데이터에 없는 빈칸은 운영기관에 물어볼 질문으로 바꿔 드립니다.
+          공공데이터로 확인되는 것은 출처와 함께 보여 드리고, 공공데이터에 없는 것은 운영기관에 그대로 물어볼 질문으로 바꿔
+          드립니다. 휠체어 이용자·고령자·유아 동반 가족이 휴양림을 고르기 전에 쓰는 서비스입니다.
         </p>
-        <ol className="grid gap-2 pt-1 text-sm sm:grid-cols-3">
+        <ul className="grid gap-2 pt-1 text-sm sm:grid-cols-3">
           {[
-            ["여정 단위로 연결", "도착 → 진입로 → 숙소 → 화장실 → 숲길 → 안전"],
-            ["출처와 기준일 표시", "공공데이터·운영자 확인·이용자 제보를 구분"],
-            ["빈칸은 질문과 제보로", "전화 질문 목록과 다녀온 분의 제보"],
-          ].map(([t, d], i) => (
-            <li key={t} className="flex gap-3 rounded-xl border border-line bg-surface px-3.5 py-3">
-              <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-strong">
-                {i + 1}
-              </span>
-              <span>
-                <strong className="block font-semibold">{t}</strong>
-                <span className="text-muted">{d}</span>
-              </span>
+            [
+              "'무장애 시설 있음'만으로는 객실 문턱이나 화장실까지 알 수 없어요",
+              `도착부터 숲길까지 ${itemCount}개 항목을 여행 순서대로, 출처·기준일과 함께 보여 드려요`,
+            ],
+            ["정보가 없으면 무엇을 물어봐야 할지 막막해요", "빈칸은 운영기관에 그대로 물어볼 전화 질문 목록이 돼요"],
+            ["공식 정보만으로는 실제 상태를 알기 어려워요", "다녀온 분의 제보를 방문 시기와 함께 따로 보여 드려요"],
+          ].map(([problem, result]) => (
+            <li key={problem} className="rounded-xl border border-line bg-surface px-3.5 py-3">
+              <p className="text-muted">{problem}</p>
+              <p className="mt-1.5 flex gap-1.5 font-semibold">
+                <ArrowRight aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-brand-strong" />
+                <span>{result}</span>
+              </p>
             </li>
           ))}
-        </ol>
+        </ul>
+        {example && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Link href={`/forest/${example.id}`} className="btn btn-primary">
+              예시로 둘러보기: {example.name}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+            <a href="#find" className="btn btn-outline">
+              휴양림 찾기
+            </a>
+          </div>
+        )}
       </section>
 
-      <div className="card p-4">
+      <div id="find" className="card scroll-mt-4 p-4">
         <GroupPicker compact />
       </div>
 
@@ -396,7 +420,15 @@ export default function Explorer({
             ))}
           </ul>
           {rows.length === 0 && (
-            <p className="card p-8 text-center text-muted">조건에 맞는 숲이 없습니다. 필터를 줄여 보세요.</p>
+            <div className="card space-y-3 p-8 text-center">
+              <p className="font-semibold">조건에 맞는 휴양림이 없습니다</p>
+              <p className="text-sm text-muted">
+                {st.q ? `'${st.q}' 검색 결과가 없습니다. 휴양림 이름 일부나 시·군 이름(예: 가평, 인제)으로 찾아보세요.` : "선택한 조건을 몇 개 풀어 보세요."}
+              </p>
+              <button type="button" className="btn btn-outline" onClick={() => update({ ...DEFAULT, view: st.view })}>
+                조건 초기화
+              </button>
+            </div>
           )}
           {rows.length > limit && (
             <div className="text-center">
