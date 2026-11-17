@@ -11,6 +11,7 @@ export interface Report {
   memo: string;
   visit: string;
   createdAt: string;
+  via?: "lens";
 }
 export const ANSWER_LABEL: Record<Answer, string> = { yes: "있었어요", no: "없었어요", unsure: "잘 모르겠어요" };
 

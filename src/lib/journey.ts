@@ -431,6 +431,7 @@ export function summarize(f: Forest): ForestSummary {
     lng: f.lng,
     stay: f.stay,
     tel: f.tel,
+    homepage: f.homepage ?? "",
     closed: f.closed,
     national: !!f.national,
     survey: !!f.survey,

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, ExternalLink, Globe, MapPinned, Phone } from "lucide-react";
+import { CalendarCheck, ChevronLeft, ExternalLink, Globe, MapPinned, Phone } from "lucide-react";
+import { bookingLink } from "@/lib/booking";
 import JourneyView from "@/components/JourneyView";
 import RoomList from "@/components/RoomList";
 import { Note, Section, Src, Sub } from "@/components/Section";
@@ -35,9 +36,9 @@ export default async function ForestPage({ params }: { params: Promise<{ id: str
   const items = buildJourney(f);
   const n = f.national;
   const lot = lotteryOf(f);
-  const home = f.homepage ? (f.homepage.startsWith("http") ? f.homepage : `https://${f.homepage}`) : "";
   const telHref = f.tel ? `tel:${f.tel.replace(/[^0-9+]/g, "")}` : "";
   const isNational = !!n || f.ownership === "국유림";
+  const book = bookingLink(f.homepage, isNational);
   const b = f.booking;
 
   return (
@@ -58,14 +59,22 @@ export default async function ForestPage({ params }: { params: Promise<{ id: str
         {f.intro?.desc && <p className="text-muted">{f.intro.desc}</p>}
         <p className="text-sm">{f.address}</p>
         <div className="flex flex-wrap gap-2 pt-1">
+          {book?.foresttrip && (
+            <a href={book.url} target="_blank" rel="noreferrer" className="btn btn-primary">
+              <CalendarCheck aria-hidden="true" className="size-4" /> 숲나들e에서 예약하기
+              <ExternalLink aria-hidden="true" className="size-3.5 opacity-80" />
+              <span className="sr-only">(새 창)</span>
+            </a>
+          )}
           {f.tel && (
-            <a href={telHref} className="btn btn-primary">
+            <a href={telHref} className={`btn ${book?.foresttrip ? "btn-outline" : "btn-primary"}`}>
               <Phone aria-hidden="true" className="size-4" /> {f.tel}
             </a>
           )}
-          {home && (
-            <a href={home} target="_blank" rel="noreferrer" className="btn btn-outline">
-              <Globe aria-hidden="true" className="size-4" /> 홈페이지·예약
+          {book && !book.foresttrip && (
+            <a href={book.url} target="_blank" rel="noreferrer" className="btn btn-outline">
+              <Globe aria-hidden="true" className="size-4" /> 홈페이지에서 예약 확인
+              <span className="sr-only">(새 창)</span>
             </a>
           )}
           {f.lat && f.lng && (
@@ -194,9 +203,9 @@ export default async function ForestPage({ params }: { params: Promise<{ id: str
         ) : (
           <p className="text-muted">
             객실별 상세 데이터는 국립자연휴양림만 공개되어 있습니다. 이 휴양림의 객실 정보는{" "}
-            {home ? (
-              <a href={home} className="underline" target="_blank" rel="noreferrer">
-                홈페이지
+            {book ? (
+              <a href={book.url} className="underline" target="_blank" rel="noreferrer">
+                {book.foresttrip ? "숲나들e" : "홈페이지"}
               </a>
             ) : (
               "운영기관"
@@ -327,7 +336,7 @@ export default async function ForestPage({ params }: { params: Promise<{ id: str
           {isNational ? (
             <p className="text-sm text-muted">
               실제 신청 일정과 자격은{" "}
-              <a href="https://www.foresttrip.go.kr" target="_blank" rel="noreferrer" className="underline underline-offset-2">
+              <a href={book?.foresttrip ? book.url : "https://www.foresttrip.go.kr"} target="_blank" rel="noreferrer" className="underline underline-offset-2">
                 숲나들e(국립자연휴양림 예약)
               </a>
               에서 확인하세요. 데이터 기준일 이후 정책이 바뀌었을 수 있습니다.
@@ -335,9 +344,9 @@ export default async function ForestPage({ params }: { params: Promise<{ id: str
           ) : !lot && !f.discounts?.length ? (
             <p className="text-muted">
               우선·추첨 예약과 할인 정책은 국립자연휴양림만 공공데이터로 공개되어 있습니다. 이 휴양림은{" "}
-              {home ? (
-                <a href={home} className="underline" target="_blank" rel="noreferrer">
-                  홈페이지
+              {book ? (
+                <a href={book.url} className="underline" target="_blank" rel="noreferrer">
+                  {book.foresttrip ? "숲나들e" : "홈페이지"}
                 </a>
               ) : (
                 "운영기관"

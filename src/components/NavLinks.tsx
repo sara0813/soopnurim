@@ -20,13 +20,13 @@ export default function NavLinks() {
             <Link
               href={l.href}
               aria-current={on ? "page" : undefined}
-              className={`relative inline-flex min-h-14 items-center px-2 sm:px-2.5 ${
+              className={`relative inline-flex min-h-14 items-center px-1.5 sm:px-2.5 ${
                 on ? "text-brand-strong" : "text-muted hover:text-fg"
               }`}
             >
               <span className="sm:hidden">{l.short}</span>
               <span className="hidden sm:inline">{l.label}</span>
-              {on && <span aria-hidden="true" className="absolute inset-x-2 bottom-0 sm:inset-x-2.5 h-0.5 rounded bg-brand-strong" />}
+              {on && <span aria-hidden="true" className="absolute inset-x-1.5 bottom-0 sm:inset-x-2.5 h-0.5 rounded bg-brand-strong" />}
             </Link>
           </li>
         );

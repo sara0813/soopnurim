@@ -15,6 +15,7 @@ import {
 import CoverageBar from "./CoverageBar";
 import GroupPicker from "./GroupPicker";
 import ReportForm, { ANSWER_LABEL, type Report } from "./ReportForm";
+import LensPanel from "./LensPanel";
 import { STEPS } from "@/lib/groups";
 import { useGroups } from "@/lib/useGroups";
 import type { Group, JourneyItem, Status } from "@/lib/types";
@@ -91,6 +92,8 @@ export default function JourneyView({
         <CoverageBar known={known} total={rel.length} size="lg" />
         <Legend />
       </div>
+
+      {rs && rs.mode !== "error" && <LensPanel forestId={forestId} onDone={load} />}
 
       <ol className="space-y-3">
         {STEPS.map((s) => {
@@ -288,6 +291,7 @@ function ReportSummary({ reports, forestId, onDone }: { reports: Report[]; fores
             <span className="min-w-0 flex-1">
               <span className="font-semibold">{ANSWER_LABEL[r.answer]}</span>
               {r.memo && <> – {r.memo}</>}
+              {r.via === "lens" && <span className="ml-1.5 align-middle text-xs text-muted">(사진 보고 확인)</span>}
               <span className="block text-xs text-muted">
                 {r.visit ? `${r.visit} 방문` : "방문 시기 미기재"} · 제보{" "}
                 {new Date(r.createdAt).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" })}

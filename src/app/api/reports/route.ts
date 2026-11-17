@@ -4,7 +4,7 @@ import { MODE, listReports, putReport, rateLimited } from "@/lib/reportStore";
 
 export const dynamic = "force-dynamic";
 
-const PUBLIC_FIELDS = ["id", "itemKey", "answer", "memo", "visit", "createdAt"] as const;
+const PUBLIC_FIELDS = ["id", "itemKey", "answer", "memo", "visit", "createdAt", "via"] as const;
 
 export async function GET(req: Request) {
   const forest = new URL(req.url).searchParams.get("forest") ?? "";
@@ -40,6 +40,7 @@ export async function POST(req: Request) {
   const answer = String(body.answer ?? "");
   const memo = String(body.memo ?? "").replace(/\s+/g, " ").trim().slice(0, 120);
   const visit = String(body.visit ?? "");
+  const via = body.via === "lens" ? ("lens" as const) : undefined;
 
   if (!FOREST_ID.test(forestId) || !ITEM_KEYS.includes(itemKey))
     return NextResponse.json({ error: "제보 항목이 올바르지 않습니다." }, { status: 400 });
@@ -63,6 +64,7 @@ export async function POST(req: Request) {
     createdAt: new Date().toISOString(),
     flags: 0,
     hidden: false,
+    ...(via ? { via } : {}),
   };
   try {
     await putReport(r);

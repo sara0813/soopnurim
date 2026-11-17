@@ -224,6 +224,7 @@ export interface ForestSummary {
   lng: number | null;
   stay: boolean | null;
   tel: string;
+  homepage: string;
   closed: boolean;
   national: boolean;
   survey: boolean;

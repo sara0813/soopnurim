@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Baby,
   BedDouble,
+  CalendarCheck,
   ChevronDown,
   List,
   LocateFixed,
@@ -24,6 +25,7 @@ import {
 import CoverageBar from "./CoverageBar";
 import GroupPicker from "./GroupPicker";
 import type { MapLayers } from "./ForestMap";
+import { bookingLink } from "@/lib/booking";
 import { coverage } from "@/lib/coverage";
 import { groupsMask } from "@/lib/groups";
 import { useGroups } from "@/lib/useGroups";
@@ -403,6 +405,7 @@ function ForestCard({
   onClose?: () => void;
 }) {
   const { f, cov, dist } = row;
+  const book = bookingLink(f.homepage, f.national || f.ownership === "국유림");
   const facts: Fact[] = [];
   if (f.stay === true) facts.push({ icon: BedDouble, text: f.roomCount ? `숙박 객실 ${f.roomCount}실` : "숙박 가능" });
   if (f.stay === false) facts.push({ icon: BedDouble, text: "당일 방문 (숙박 없음)" });
@@ -465,6 +468,17 @@ function ForestCard({
         <Link href={`/forest/${f.id}`} className="btn btn-primary flex-1">
           자세히 보기 <ArrowRight aria-hidden="true" className="size-4" />
         </Link>
+        {book && (
+          <a
+            href={book.url}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-outline px-3"
+            aria-label={`${f.name} ${book.foresttrip ? "숲나들e에서 예약" : "홈페이지에서 예약 확인"} (새 창)`}
+          >
+            <CalendarCheck aria-hidden="true" className="size-4" /> 예약
+          </a>
+        )}
         {f.tel && (
           <a
             href={`tel:${f.tel.replace(/[^0-9+]/g, "")}`}

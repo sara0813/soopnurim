@@ -109,12 +109,17 @@ export default function About() {
       </section>
 
       <section className="card space-y-2 p-4 sm:p-5">
-        <h2 className="text-xl font-bold">준비 중: 숲누림 렌즈 (AI 보조 제보)</h2>
+        <h2 className="text-xl font-bold">숲누림 렌즈 (AI 보조 제보)</h2>
         <p>
-          다녀온 분이 사진을 올리면 AI가 사진 속 단서(문턱, 경사로, 손잡이 등)를 찾아 어떤 항목에 제보할지 <strong>제안만</strong>
-          합니다. 제보로 반영되는 것은 이용자가 직접 확인하고 확정한 내용뿐이며, 사진의 위치정보(EXIF)와 얼굴·차량번호 같은
-          개인정보는 저장하지 않는 것을 원칙으로 합니다.
+          휴양림 상세 페이지의 &lsquo;사진으로 빈칸 채우기&rsquo;에서 다녀온 곳 사진을 올리면, AI가 사진 속 단서(문턱, 경사로,
+          손잡이 등)를 찾아 어떤 항목에 제보할지 <strong>제안만</strong> 합니다. 제보로 남는 것은 이용자가 직접 고르고 확인한
+          항목뿐이며, 이 제보에는 &lsquo;사진 보고 확인&rsquo;이 함께 표시됩니다.
         </p>
+        <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
+          <li>사진은 올리기 전에 브라우저에서 크기를 줄이고 위치정보(EXIF)를 지웁니다.</li>
+          <li>사진은 분석에만 쓰고 숲누림에 저장하지 않습니다. 분석에는 Anthropic의 Claude를 사용합니다.</li>
+          <li>AI는 판정을 하지 않고 사진에 보이는 사실만 제안하며, 얼굴·차량번호 같은 개인정보는 적지 않도록 했습니다.</li>
+        </ul>
       </section>
 
       <p className="text-sm text-muted">

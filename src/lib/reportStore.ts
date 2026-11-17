@@ -17,6 +17,8 @@ export interface StoredReport {
   createdAt: string;
   flags: number;
   hidden: boolean;
+  /** "lens" = 사진을 보고 AI 제안을 이용자가 확인해 남긴 제보 */
+  via?: "lens";
 }
 
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "";
